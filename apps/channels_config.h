@@ -6,7 +6,7 @@
  *   文件名称：channels_config.h
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 11时00分11秒
- *   修改日期：2022年05月09日 星期一 11时24分05秒
+ *   修改日期：2022年05月10日 星期二 15时55分02秒
  *   描    述：
  *
  *================================================================*/
@@ -51,7 +51,6 @@ typedef struct {
 	test_uart_config_t uart2;
 	test_uart_config_t uart3;
 	test_uart_config_t uart4;
-	test_uart_config_t uart5;
 	comm_config_t comm_config;
 } channels_config_t;
 

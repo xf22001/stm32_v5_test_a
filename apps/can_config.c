@@ -6,7 +6,7 @@
  *   文件名称：can_config.c
  *   创 建 者：肖飞
  *   创建日期：2020年04月17日 星期五 09时16分53秒
- *   修改日期：2022年03月23日 星期三 11时21分51秒
+ *   修改日期：2022年05月10日 星期二 16时17分40秒
  *   描    述：
  *
  *================================================================*/
@@ -62,8 +62,8 @@ can_config_t can_config_can3 = {
 	.filter_mask_ext = 0,
 
 	.tx_fifo = CAN_FIFO_CH2,
-	.spi_cs_port = GPIOG,
-	.spi_cs_pin = GPIO_PIN_15,
+	.spi_cs_port = SPICAN_CS_GPIO_Port,
+	.spi_cs_pin = SPICAN_CS_Pin,
 };
 #endif
 

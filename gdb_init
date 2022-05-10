@@ -1,4 +1,4 @@
-file build/v5_test_b.elf
+file build/v5_test_a.elf
 target remote :2331
 set pagination off
 set print pretty on

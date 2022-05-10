@@ -6,7 +6,7 @@
 #   文件名称：override.mk
 #   创 建 者：肖飞
 #   创建日期：2020年04月02日 星期四 16时40分02秒
-#   修改日期：2022年03月18日 星期五 12时31分19秒
+#   修改日期：2022年05月09日 星期一 14时31分01秒
 #   描    述：
 #
 #================================================================
@@ -32,24 +32,39 @@ ifneq ($(call ifdef_any_of,ENABLE_CXX),)
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(USER_CPP_SOURCES:.cpp=.o))
 endif
 
+ifndef ECHO
+T := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
+      -nrRf $(firstword $(MAKEFILE_LIST)) \
+      ECHO="COUNTTHIS" | grep -c "COUNTTHIS")
+
+N := x
+C = $(words $N)$(eval N := x $N)
+ECHO = echo "`expr " [\`expr $C '*' 100 / $T\`" : '\(.*\)$$'`%]"
+endif
+
 ifneq ($(call ifdef_any_of,ENABLE_CXX),)
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+	@$(ECHO) Compiling $@
 	mkdir -p $(dir $@)
 	$(CC) -c $(subst -MMD,-MD,$(CFLAGS)) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(<:.c=.lst) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+	@$(ECHO) Compiling $@
 	mkdir -p $(dir $@)
 	$(AS) -c $(subst -MMD,-MD,$(CFLAGS)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
+	@$(ECHO) Compiling $@
 	mkdir -p $(dir $@)
 	$(CXX) -c $(subst -MMD,-MD,$(CFLAGS)) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(<:.cpp=.lst) $< -o $@
 else
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+	@$(ECHO) Compiling $@
 	mkdir -p $(dir $@)
 	$(CC) -c $(subst -MMD,-MD,$(CFLAGS)) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(<:.c=.lst) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+	@$(ECHO) Compiling $@
 	mkdir -p $(dir $@)
 	$(AS) -c $(subst -MMD,-MD,$(CFLAGS)) $< -o $@
 endif

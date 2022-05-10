@@ -269,8 +269,8 @@ void Error_Handler(void);
 #define PLUG2_LOCK_2_GPIO_Port GPIOG
 #define PLUG2_LOCK_BACK_Pin GPIO_PIN_14
 #define PLUG2_LOCK_BACK_GPIO_Port GPIOG
-#define SPICAN_SCK_Pin GPIO_PIN_15
-#define SPICAN_SCK_GPIO_Port GPIOG
+#define SPICAN_CS_Pin GPIO_PIN_15
+#define SPICAN_CS_GPIO_Port GPIOG
 #define SPICAN_MISO_Pin GPIO_PIN_4
 #define SPICAN_MISO_GPIO_Port GPIOB
 #define SPICAN_MOSI_Pin GPIO_PIN_5

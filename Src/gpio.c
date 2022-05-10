@@ -79,7 +79,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, FAN1_RLY_DRV_Pin|K3_PLUG1_Pin|K1_PLUG2_Pin|K3_PLUG2_Pin
                           |CONTACTOR_DRV_Pin|MAIN_RLY_PLUG2_Pin|BMSPOWER_PLUG2_Pin|PLUG2_LOCK_1_Pin
-                          |PLUG2_LOCK_2_Pin|SPICAN_SCK_Pin, GPIO_PIN_RESET);
+                          |PLUG2_LOCK_2_Pin|SPICAN_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_SET);
@@ -175,7 +175,7 @@ void MX_GPIO_Init(void)
                            PGPin PGPin */
   GPIO_InitStruct.Pin = FAN1_RLY_DRV_Pin|K3_PLUG1_Pin|K1_PLUG2_Pin|K3_PLUG2_Pin
                           |CONTACTOR_DRV_Pin|MAIN_RLY_PLUG2_Pin|BMSPOWER_PLUG2_Pin|PLUG2_LOCK_1_Pin
-                          |PLUG2_LOCK_2_Pin|SPICAN_SCK_Pin;
+                          |PLUG2_LOCK_2_Pin|SPICAN_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
