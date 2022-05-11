@@ -6,7 +6,7 @@
  *   文件名称：test_can_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月09日 星期一 09时03分12秒
- *   修改日期：2022年05月09日 星期一 10时44分55秒
+ *   修改日期：2022年05月11日 星期三 08时56分36秒
  *   描    述：
  *
  *================================================================*/
@@ -44,7 +44,7 @@ static void can_data_request(void *fn_ctx, void *chain_ctx)
 	uint32_t ticks = osKernelSysTick();
 	int ret;
 
-	if(ticks_duration(ticks, ctx->stamp) < 10) {
+	if(ticks_duration(ticks, ctx->stamp) < 50) {
 		return;
 	}
 

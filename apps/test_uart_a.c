@@ -6,7 +6,7 @@
  *   文件名称：test_uart_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月09日 星期一 09时04分44秒
- *   修改日期：2022年05月09日 星期一 10时49分55秒
+ *   修改日期：2022年05月11日 星期三 08时55分15秒
  *   描    述：
  *
  *================================================================*/
@@ -62,10 +62,6 @@ static void uart_periodic(void *fn_ctx, void *chain_ctx)
 
 	if(get_fault(channels_info->faults, uart_fault) != fault) {
 		set_fault(channels_info->faults, uart_fault, fault);
-
-		if(fault != 0) {
-			debug("");
-		}
 	}
 }
 
@@ -106,13 +102,13 @@ static void uart_data_request(void *fn_ctx, void *chain_ctx)
 			if(uart_test_rx_data->v == v) {
 				ctx->alive_stamps = ticks;
 			} else {
-				debug("uart_test_rx_data->v:%u, v:%u", uart_test_rx_data->v, v);
+				debug("uart %d uart_test_rx_data->v:%u, v:%u", ctx->id, uart_test_rx_data->v, v);
 			}
 		} else {
-			debug("uart_test_rx_data->id:%d, ctx->id:%d", uart_test_rx_data->id, ctx->id);
+			debug("uart %d uart_test_rx_data->id:%d, ctx->id:%d", ctx->id, uart_test_rx_data->id, ctx->id);
 		}
 	} else {
-		debug("rx_size:%d, ctx->rx_size:%d", rx_size, ctx->rx_size);
+		debug("uart %d rx_size:%d, ctx->rx_size:%d", ctx->id, rx_size, ctx->rx_size);
 	}
 }
 
