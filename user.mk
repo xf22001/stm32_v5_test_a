@@ -6,7 +6,7 @@
 #   文件名称：user.mk
 #   创 建 者：肖飞
 #   创建日期：2019年10月25日 星期五 13时04分38秒
-#   修改日期：2022年05月09日 星期一 09时17分44秒
+#   修改日期：2022年05月16日 星期一 16时37分43秒
 #   描    述：
 #
 #================================================================
@@ -39,6 +39,7 @@ USER_C_SOURCES += apps/channels_config.c
 USER_C_SOURCES += apps/channels.c
 USER_C_SOURCES += apps/test_can_a.c
 USER_C_SOURCES += apps/test_uart_a.c
+USER_C_SOURCES += apps/test_ports_a.c
 ifneq ($(call ifdef_any_of,SPI_CAN),)
 USER_C_SOURCES += apps/exti.c
 endif
@@ -51,6 +52,7 @@ USER_C_SOURCES += apps/modules/app/early_sys_callback.c
 USER_C_SOURCES += apps/modules/app/connect_state.c
 USER_C_SOURCES += apps/modules/app/can_command.c
 USER_C_SOURCES += apps/modules/app/display.c
+USER_C_SOURCES += apps/modules/hardware/modbus_master_txrx.c
 USER_C_SOURCES += apps/modules/hardware/modbus_slave_txrx.c
 USER_C_SOURCES += apps/modules/hardware/modbus_spec.c
 USER_C_SOURCES += apps/modules/drivers/spi_txrx.c

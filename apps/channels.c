@@ -6,7 +6,7 @@
  *   文件名称：channels.c
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 09时26分31秒
- *   修改日期：2022年05月10日 星期二 15时59分11秒
+ *   修改日期：2022年05月16日 星期一 17时11分16秒
  *   描    述：
  *
  *================================================================*/
@@ -21,6 +21,7 @@
 #include "display.h"
 #include "test_can_a.h"
 #include "test_uart_a.h"
+#include "test_ports_a.h"
 
 #include "log.h"
 
@@ -166,6 +167,20 @@ static void channels_info_channels_settings_changed(void *fn_ctx, void *chain_ct
 	sync_channels_display_cache(channels_info);
 }
 
+static void handle_channels_common_event(void *_channels_info, void *_channels_event)
+{
+	//channels_info_t *channels_info = (channels_info_t *)_channels_info;
+	channels_event_t *channels_event = (channels_event_t *)_channels_event;
+
+	debug("channels_info common process event %s!", get_channels_event_type_des(channels_event->type));
+
+	switch(channels_event->type) {
+		default: {
+		}
+		break;
+	}
+}
+
 static int channels_info_set_channels_config(channels_info_t *channels_info, channels_config_t *channels_config)
 {
 	int ret = 0;
@@ -205,6 +220,12 @@ static int channels_info_set_channels_config(channels_info_t *channels_info, cha
 	channels_info->uart2 = test_uart_a(channels_info, channels_info->channels_config->uart2.huart, 1);
 	channels_info->uart3 = test_uart_a(channels_info, channels_info->channels_config->uart3.huart, 2);
 	channels_info->uart4 = test_uart_a(channels_info, channels_info->channels_config->uart4.huart, 3);
+
+	channels_info->event_callback_item.fn = handle_channels_common_event;
+	channels_info->event_callback_item.fn_ctx = channels_info;
+	OS_ASSERT(register_callback(channels_info->common_event_chain, &channels_info->event_callback_item) == 0);
+
+	start_ports_tests(channels_info);
 
 	channels_info->configed = 1;
 

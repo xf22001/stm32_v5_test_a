@@ -6,7 +6,7 @@
  *   文件名称：channels.h
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 10时08分44秒
- *   修改日期：2022年05月07日 星期六 10时45分06秒
+ *   修改日期：2022年05月16日 星期一 17时27分49秒
  *   描    述：
  *
  *================================================================*/
@@ -51,6 +51,21 @@ typedef enum {
 	CHANNELS_FAULT_UART3,
 	CHANNELS_FAULT_UART4,
 	CHANNELS_FAULT_UART5,
+	CHANNELS_FAULT_CONTACTOR_DRV,
+	CHANNELS_FAULT_FAN1_RLY_DRV,
+	CHANNELS_FAULT_VTRANS_1_12V_24,
+	CHANNELS_FAULT_VTRANS_2_12V_24,
+	CHANNELS_FAULT_BMSPOWER_PLUG1,
+	CHANNELS_FAULT_BMSPOWER_PLUG2,
+	CHANNELS_FAULT_LED_YELLOW_PLUG1,
+	CHANNELS_FAULT_LED_YELLOW_PLUG2,
+	CHANNELS_FAULT_LED_RED_PLUG1,
+	CHANNELS_FAULT_LED_RED_PLUG2,
+	CHANNELS_FAULT_LED_GREEN_POWER1,
+	CHANNELS_FAULT_LED_GREEN_POWER2,
+	CHANNELS_FAULT_CHARGING_LED_SCLK2,
+	CHANNELS_FAULT_PAR_EXT_TX2,
+	CHANNELS_FAULT_PAR_EXT_TX3,
 	CHANNELS_FAULT_SIZE,
 } channels_fault_t;
 
@@ -62,6 +77,25 @@ typedef struct {
 	channels_notify_t notify;
 	void *ctx;
 } channels_notify_ctx_t;
+
+typedef enum {
+	CHANNELS_TEST_TYPE_NONE = 0,
+	CHANNELS_TEST_TYPE_CONTACTOR_DRV,
+	CHANNELS_TEST_TYPE_FAN1_RLY_DRV,
+	CHANNELS_TEST_TYPE_VTRANS_1_12V_24,
+	CHANNELS_TEST_TYPE_VTRANS_2_12V_24,
+	CHANNELS_TEST_TYPE_BMSPOWER_PLUG1,
+	CHANNELS_TEST_TYPE_BMSPOWER_PLUG2,
+	CHANNELS_TEST_TYPE_LED_YELLOW_PLUG1,
+	CHANNELS_TEST_TYPE_LED_YELLOW_PLUG2,
+	CHANNELS_TEST_TYPE_LED_RED_PLUG1,
+	CHANNELS_TEST_TYPE_LED_RED_PLUG2,
+	CHANNELS_TEST_TYPE_LED_GREEN_POWER1,
+	CHANNELS_TEST_TYPE_LED_GREEN_POWER2,
+	CHANNELS_TEST_TYPE_CHARGING_LED_SCLK2,
+	CHANNELS_TEST_TYPE_PAR_EXT_TX2,
+	CHANNELS_TEST_TYPE_PAR_EXT_TX3,
+} channels_test_type_t;
 
 typedef struct {
 	channels_config_t *channels_config;
@@ -84,6 +118,9 @@ typedef struct {
 
 	display_cache_channels_t display_cache_channels;
 	bitmap_t *faults;//channels_fault_t
+
+	channels_test_type_t test_type;
+	channels_test_type_t request_test_type;
 
 	void *display_info;
 	void *can1;
