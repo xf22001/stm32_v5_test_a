@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年05月16日 星期一 17时27分42秒
+ *   修改日期：2022年05月17日 星期二 10时27分09秒
  *   描    述：
  *
  *================================================================*/
@@ -14,55 +14,259 @@
 #include "modbus_master_txrx.h"
 #include "main.h"
 
+#include "log.h"
+
+typedef enum {
+	PORTS_TEST_TYPE_NONE = 0,
+	PORTS_TEST_TYPE_CONTACTOR_DRV,
+	PORTS_TEST_TYPE_FAN1_RLY_DRV,
+	PORTS_TEST_TYPE_VTRANS_1_12V_24,
+	PORTS_TEST_TYPE_VTRANS_2_12V_24,
+	PORTS_TEST_TYPE_BMSPOWER_PLUG1,
+	PORTS_TEST_TYPE_BMSPOWER_PLUG2,
+	PORTS_TEST_TYPE_LED_YELLOW_PLUG1,
+	PORTS_TEST_TYPE_LED_YELLOW_PLUG2,
+	PORTS_TEST_TYPE_LED_RED_PLUG1,
+	PORTS_TEST_TYPE_LED_RED_PLUG2,
+	PORTS_TEST_TYPE_LED_GREEN_POWER1,
+	PORTS_TEST_TYPE_LED_GREEN_POWER2,
+	PORTS_TEST_TYPE_CHARGING_LED_SCLK2,
+	PORTS_TEST_CHARGING_LED_LCLK2,
+	PORTS_TEST_CHARGING_LED_DS2,
+	PORTS_TEST_CHARGING_LED_SCLK1,
+	PORTS_TEST_CHARGING_LED_LCLK1,
+	PORTS_TEST_CHARGING_LED_DS1,
+	PORTS_TEST_PAR_EXT_RX1,
+	PORTS_TEST_PAR_EXT_RX2,
+	PORTS_TEST_PAR_EXT_RX3,
+	PORTS_TEST_PAR_EXT_TX1,
+	PORTS_TEST_PAR_EXT_TX2,
+	PORTS_TEST_PAR_EXT_TX3,
+} ports_test_type_t;
+
 typedef struct {
 	callback_item_t periodic_callback_item;
 	modbus_master_info_t *modbus_master_info;
 	uint8_t state;
 	int port_fault;
 	uint32_t stamp;
+	ports_test_type_t ports_test_type;
 	GPIO_TypeDef *gpio_port;
 	uint16_t gpio_pin;
 	uint8_t gpio_state1;
 	uint8_t gpio_state2;
+	int index;
 } test_ports_ctx_t;
 
-static int is_port_test_type(channels_info_t *channels_info)
-{
-	int ret = 0;
+typedef struct {
+	ports_test_type_t request_ports_test_type;
+	int port_fault;
+	GPIO_TypeDef *gpio_port;
+	uint16_t gpio_pin;
+	uint8_t gpio_state1;
+	uint8_t gpio_state2;
+} test_port_item_t;
 
-	switch(channels_info->test_type) {
-		case CHANNELS_TEST_TYPE_CONTACTOR_DRV:
-		case CHANNELS_TEST_TYPE_FAN1_RLY_DRV:
-		case CHANNELS_TEST_TYPE_VTRANS_1_12V_24:
-		case CHANNELS_TEST_TYPE_VTRANS_2_12V_24:
-		case CHANNELS_TEST_TYPE_BMSPOWER_PLUG1:
-		case CHANNELS_TEST_TYPE_BMSPOWER_PLUG2:
-		case CHANNELS_TEST_TYPE_LED_YELLOW_PLUG1:
-		case CHANNELS_TEST_TYPE_LED_YELLOW_PLUG2:
-		case CHANNELS_TEST_TYPE_LED_RED_PLUG1:
-		case CHANNELS_TEST_TYPE_LED_RED_PLUG2:
-		case CHANNELS_TEST_TYPE_LED_GREEN_POWER1:
-		case CHANNELS_TEST_TYPE_LED_GREEN_POWER2:
-		case CHANNELS_TEST_TYPE_CHARGING_LED_SCLK2:
-		case CHANNELS_TEST_TYPE_PAR_EXT_TX2:
-		case CHANNELS_TEST_TYPE_PAR_EXT_TX3: {
-			ret = 1;
-		}
-		break;
-
-		default: {
-		}
-		break;
-	}
-
-	return ret;
-}
+static test_port_item_t test_port_items[] = {
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_CONTACTOR_DRV,
+		.port_fault = CHANNELS_FAULT_CONTACTOR_DRV,
+		.gpio_port = CONTACTOR_DRV_GPIO_Port,
+		.gpio_pin = CONTACTOR_DRV_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_FAN1_RLY_DRV,
+		.port_fault = CHANNELS_FAULT_FAN1_RLY_DRV,
+		.gpio_port = FAN1_RLY_DRV_GPIO_Port,
+		.gpio_pin = FAN1_RLY_DRV_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_VTRANS_1_12V_24,
+		.port_fault = CHANNELS_FAULT_VTRANS_1_12V_24,
+		.gpio_port = VTRANS_1_12V_24_GPIO_Port,
+		.gpio_pin = VTRANS_1_12V_24_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_VTRANS_2_12V_24,
+		.port_fault = CHANNELS_FAULT_VTRANS_2_12V_24,
+		.gpio_port = VTRANS_2_12V_24_GPIO_Port,
+		.gpio_pin = VTRANS_2_12V_24_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_BMSPOWER_PLUG1,
+		.port_fault = CHANNELS_FAULT_BMSPOWER_PLUG1,
+		.gpio_port = BMSPOWER_PLUG1_GPIO_Port,
+		.gpio_pin = BMSPOWER_PLUG1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_BMSPOWER_PLUG2,
+		.port_fault = CHANNELS_FAULT_BMSPOWER_PLUG2,
+		.gpio_port = BMSPOWER_PLUG2_GPIO_Port,
+		.gpio_pin = BMSPOWER_PLUG2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_LED_YELLOW_PLUG1,
+		.port_fault = CHANNELS_FAULT_LED_YELLOW_PLUG1,
+		.gpio_port = LED_YELLOW_PLUG1_GPIO_Port,
+		.gpio_pin = LED_YELLOW_PLUG1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_LED_YELLOW_PLUG2,
+		.port_fault = CHANNELS_FAULT_LED_YELLOW_PLUG2,
+		.gpio_port = LED_YELLOW_PLUG2_GPIO_Port,
+		.gpio_pin = LED_YELLOW_PLUG2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_LED_RED_PLUG1,
+		.port_fault = CHANNELS_FAULT_LED_RED_PLUG1,
+		.gpio_port = LED_RED_PLUG1_GPIO_Port,
+		.gpio_pin = LED_RED_PLUG1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_LED_RED_PLUG2,
+		.port_fault = CHANNELS_FAULT_LED_RED_PLUG2,
+		.gpio_port = LED_RED_PLUG2_GPIO_Port,
+		.gpio_pin = LED_RED_PLUG2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_LED_GREEN_POWER1,
+		.port_fault = CHANNELS_FAULT_LED_GREEN_POWER1,
+		.gpio_port = LED_GREEN_POWER1_GPIO_Port,
+		.gpio_pin = LED_GREEN_POWER1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_LED_GREEN_POWER2,
+		.port_fault = CHANNELS_FAULT_LED_GREEN_POWER2,
+		.gpio_port = LED_GREEN_POWER2_GPIO_Port,
+		.gpio_pin = LED_GREEN_POWER2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_TYPE_CHARGING_LED_SCLK2,
+		.port_fault = CHANNELS_FAULT_CHARGING_LED_SCLK2,
+		.gpio_port = CHARGING_LED_SCLK2_GPIO_Port,
+		.gpio_pin = CHARGING_LED_SCLK2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_CHARGING_LED_LCLK2,
+		.port_fault = CHANNELS_FAULT_CHARGING_LED_LCLK2,
+		.gpio_port = CHARGING_LED_LCLK2_GPIO_Port,
+		.gpio_pin = CHARGING_LED_LCLK2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_CHARGING_LED_DS2,
+		.port_fault = CHANNELS_FAULT_CHARGING_LED_DS2,
+		.gpio_port = CHARGING_LED_DS2_GPIO_Port,
+		.gpio_pin = CHARGING_LED_DS2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_CHARGING_LED_SCLK1,
+		.port_fault = CHANNELS_FAULT_CHARGING_LED_SCLK1,
+		.gpio_port = CHARGING_LED_SCLK1_GPIO_Port,
+		.gpio_pin = CHARGING_LED_SCLK1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_CHARGING_LED_LCLK1,
+		.port_fault = CHANNELS_FAULT_CHARGING_LED_LCLK1,
+		.gpio_port = CHARGING_LED_LCLK1_GPIO_Port,
+		.gpio_pin = CHARGING_LED_LCLK1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_CHARGING_LED_DS1,
+		.port_fault = CHANNELS_FAULT_CHARGING_LED_DS1,
+		.gpio_port = CHARGING_LED_DS1_GPIO_Port,
+		.gpio_pin = CHARGING_LED_DS1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_PAR_EXT_RX1,
+		.port_fault = CHANNELS_FAULT_PAR_EXT_RX1,
+		.gpio_port = PAR_EXT_RX1_GPIO_Port,
+		.gpio_pin = PAR_EXT_RX1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_PAR_EXT_RX2,
+		.port_fault = CHANNELS_FAULT_PAR_EXT_RX2,
+		.gpio_port = PAR_EXT_RX2_GPIO_Port,
+		.gpio_pin = PAR_EXT_RX2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_PAR_EXT_RX3,
+		.port_fault = CHANNELS_FAULT_PAR_EXT_RX3,
+		.gpio_port = PAR_EXT_RX3_GPIO_Port,
+		.gpio_pin = PAR_EXT_RX3_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_PAR_EXT_TX1,
+		.port_fault = CHANNELS_FAULT_PAR_EXT_TX1,
+		.gpio_port = PAR_EXT_TX1_GPIO_Port,
+		.gpio_pin = PAR_EXT_TX1_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_PAR_EXT_TX2,
+		.port_fault = CHANNELS_FAULT_PAR_EXT_TX2,
+		.gpio_port = PAR_EXT_TX2_GPIO_Port,
+		.gpio_pin = PAR_EXT_TX2_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+	{
+		.request_ports_test_type = PORTS_TEST_PAR_EXT_TX3,
+		.port_fault = CHANNELS_FAULT_PAR_EXT_TX3,
+		.gpio_port = PAR_EXT_TX3_GPIO_Port,
+		.gpio_pin = PAR_EXT_TX3_Pin,
+		.gpio_state1 = GPIO_PIN_RESET,
+		.gpio_state2 = GPIO_PIN_SET,
+	},
+};
 
 static int do_port_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 {
 	int ret = 1;
 
-	if(is_port_test_type(channels_info) == 0) {
+	if(ctx->ports_test_type == PORTS_TEST_TYPE_NONE) {
 		return ret;
 	}
 
@@ -77,7 +281,7 @@ static int do_port_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 		case 1: {
 			uint16_t value;
 
-			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, channels_info->test_type, 1, &value, 3) == 0) {
+			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, ctx->ports_test_type, 1, &value, 3) == 0) {
 				if(value == ctx->gpio_state1) {
 					ctx->state = 2;
 				} else {
@@ -103,7 +307,7 @@ static int do_port_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 		case 3: {
 			uint16_t value;
 
-			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, channels_info->test_type, 1, &value, 3) == 0) {
+			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, ctx->ports_test_type, 1, &value, 3) == 0) {
 				if(value == ctx->gpio_state2) {
 					ret = 0;
 				} else {
@@ -128,227 +332,31 @@ static int do_port_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 	return ret;
 }
 
-static void handle_port_test_request(test_ports_ctx_t *ctx, channels_info_t *channels_info)
+void handle_ports_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 {
-	if(channels_info->test_type != CHANNELS_TEST_TYPE_NONE) {
+	test_port_item_t *test_port_item;
+
+	if(ctx->ports_test_type != PORTS_TEST_TYPE_NONE) {
 		return;
 	}
 
-	switch(channels_info->request_test_type) {
-		case CHANNELS_TEST_TYPE_CONTACTOR_DRV: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_CONTACTOR_DRV;
-			ctx->gpio_port = CONTACTOR_DRV_GPIO_Port;
-			ctx->gpio_pin = CONTACTOR_DRV_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_FAN1_RLY_DRV: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_FAN1_RLY_DRV;
-			ctx->gpio_port = FAN1_RLY_DRV_GPIO_Port;
-			ctx->gpio_pin = FAN1_RLY_DRV_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_VTRANS_1_12V_24: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_VTRANS_1_12V_24;
-			ctx->gpio_port = VTRANS_1_12V_24_GPIO_Port;
-			ctx->gpio_pin = VTRANS_1_12V_24_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_VTRANS_2_12V_24: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_VTRANS_2_12V_24;
-			ctx->gpio_port = VTRANS_2_12V_24_GPIO_Port;
-			ctx->gpio_pin = VTRANS_2_12V_24_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_BMSPOWER_PLUG1: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_BMSPOWER_PLUG1;
-			ctx->gpio_port = BMSPOWER_PLUG1_GPIO_Port;
-			ctx->gpio_pin = BMSPOWER_PLUG1_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_BMSPOWER_PLUG2: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_BMSPOWER_PLUG2;
-			ctx->gpio_port = BMSPOWER_PLUG2_GPIO_Port;
-			ctx->gpio_pin = BMSPOWER_PLUG2_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_LED_YELLOW_PLUG1: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_LED_YELLOW_PLUG1;
-			ctx->gpio_port = LED_YELLOW_PLUG1_GPIO_Port;
-			ctx->gpio_pin = LED_YELLOW_PLUG1_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_LED_YELLOW_PLUG2: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_LED_YELLOW_PLUG2;
-			ctx->gpio_port = LED_YELLOW_PLUG2_GPIO_Port;
-			ctx->gpio_pin = LED_YELLOW_PLUG2_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_LED_RED_PLUG1: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_LED_RED_PLUG1;
-			ctx->gpio_port = LED_RED_PLUG1_GPIO_Port;
-			ctx->gpio_pin = LED_RED_PLUG1_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_LED_RED_PLUG2: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_LED_RED_PLUG2;
-			ctx->gpio_port = LED_RED_PLUG2_GPIO_Port;
-			ctx->gpio_pin = LED_RED_PLUG2_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_LED_GREEN_POWER1: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_LED_GREEN_POWER1;
-			ctx->gpio_port = LED_GREEN_POWER1_GPIO_Port;
-			ctx->gpio_pin = LED_GREEN_POWER1_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_LED_GREEN_POWER2: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_LED_GREEN_POWER2;
-			ctx->gpio_port = LED_GREEN_POWER2_GPIO_Port;
-			ctx->gpio_pin = LED_GREEN_POWER2_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_CHARGING_LED_SCLK2: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_CHARGING_LED_SCLK2;
-			ctx->gpio_port = CHARGING_LED_SCLK2_GPIO_Port;
-			ctx->gpio_pin = CHARGING_LED_SCLK2_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_PAR_EXT_TX2: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_PAR_EXT_TX2;
-			ctx->gpio_port = PAR_EXT_TX2_GPIO_Port;
-			ctx->gpio_pin = PAR_EXT_TX2_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		case CHANNELS_TEST_TYPE_PAR_EXT_TX3: {
-			channels_info->test_type = channels_info->request_test_type;
-			channels_info->request_test_type = CHANNELS_TEST_TYPE_NONE;
-
-			ctx->state = 0;
-			ctx->port_fault = CHANNELS_FAULT_PAR_EXT_TX3;
-			ctx->gpio_port = PAR_EXT_TX3_GPIO_Port;
-			ctx->gpio_pin = PAR_EXT_TX3_Pin;
-			ctx->gpio_state1 = GPIO_PIN_RESET;
-			ctx->gpio_state2 = GPIO_PIN_SET;
-			set_fault(channels_info->faults, ctx->port_fault, 0);
-		}
-		break;
-
-		default: {
-		}
-		break;
+	if(ARRAY_SIZE(test_port_items) <= 0) {
+		return;
 	}
+
+	if(ctx->index >= ARRAY_SIZE(test_port_items)) {
+		ctx->index = 0;
+	}
+
+	test_port_item = &test_port_items[ctx->index];
+
+	ctx->state = 0;
+	ctx->ports_test_type = test_port_item->request_ports_test_type;
+	ctx->port_fault = test_port_item->port_fault;
+	ctx->gpio_port = test_port_item->gpio_port;
+	ctx->gpio_pin = test_port_item->gpio_pin;
+	ctx->gpio_state1 = test_port_item->gpio_state1;
+	ctx->gpio_state2 = test_port_item->gpio_state2;
 }
 
 static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
@@ -357,16 +365,17 @@ static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 	channels_info_t *channels_info = (channels_info_t *)chain_ctx;
 	int ret;
 
-	handle_port_test_request(ctx, channels_info);
-
 	ret = do_port_test(ctx, channels_info);
 
 	if(ret == -1) {
 		set_fault(channels_info->faults, ctx->port_fault, 1);
-		channels_info->test_type = CHANNELS_TEST_TYPE_NONE;
+		ctx->ports_test_type = PORTS_TEST_TYPE_NONE;
 	} else if(ret == 0) {
-		channels_info->test_type = CHANNELS_TEST_TYPE_NONE;
+		set_fault(channels_info->faults, ctx->port_fault, 0);
+		ctx->ports_test_type = PORTS_TEST_TYPE_NONE;
 	}
+
+	handle_ports_test(ctx, channels_info);
 }
 
 void start_ports_tests(channels_info_t *channels_info)
