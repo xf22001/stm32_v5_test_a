@@ -1,0 +1,54 @@
+
+
+/*================================================================
+ *   
+ *   
+ *   文件名称：test_type.h
+ *   创 建 者：肖飞
+ *   创建日期：2022年06月01日 星期三 16时58分26秒
+ *   修改日期：2022年06月01日 星期三 16时59分06秒
+ *   描    述：
+ *
+ *================================================================*/
+#ifndef _TEST_TYPE_H
+#define _TEST_TYPE_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#include "app_platform.h"
+#include "cmsis_os.h"
+
+typedef enum {
+	TEST_TYPE_PORTS_NONE = 0,
+	TEST_TYPE_PORTS_CONTACTOR_DRV,
+	TEST_TYPE_PORTS_FAN1_RLY_DRV,
+	TEST_TYPE_PORTS_VTRANS_1_12V_24,
+	TEST_TYPE_PORTS_VTRANS_2_12V_24,
+	TEST_TYPE_PORTS_BMSPOWER_PLUG1,
+	TEST_TYPE_PORTS_BMSPOWER_PLUG2,
+	TEST_TYPE_PORTS_LED_YELLOW_PLUG1,
+	TEST_TYPE_PORTS_LED_YELLOW_PLUG2,
+	TEST_TYPE_PORTS_LED_RED_PLUG1,
+	TEST_TYPE_PORTS_LED_RED_PLUG2,
+	TEST_TYPE_PORTS_LED_GREEN_POWER1,
+	TEST_TYPE_PORTS_LED_GREEN_POWER2,
+	TEST_TYPE_PORTS_CHARGING_LED_SCLK2,
+	TEST_TYPE_PORTS_CHARGING_LED_LCLK2,
+	TEST_TYPE_PORTS_CHARGING_LED_DS2,
+	TEST_TYPE_PORTS_CHARGING_LED_SCLK1,
+	TEST_TYPE_PORTS_CHARGING_LED_LCLK1,
+	TEST_TYPE_PORTS_CHARGING_LED_DS1,
+	TEST_TYPE_PORTS_PAR_EXT_RX1,
+	TEST_TYPE_PORTS_PAR_EXT_RX2,
+	TEST_TYPE_PORTS_PAR_EXT_RX3,
+	TEST_TYPE_PORTS_PAR_EXT_TX1,
+	TEST_TYPE_PORTS_PAR_EXT_TX2,
+	TEST_TYPE_PORTS_PAR_EXT_TX3,
+} test_type_t;
+
+#ifdef __cplusplus
+}
+#endif
+#endif //_TEST_TYPE_H

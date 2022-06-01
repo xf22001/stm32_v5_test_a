@@ -6,43 +6,16 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年05月17日 星期二 10时27分09秒
+ *   修改日期：2022年06月01日 星期三 16时59分23秒
  *   描    述：
  *
  *================================================================*/
 #include "test_ports_a.h"
 #include "modbus_master_txrx.h"
 #include "main.h"
+#include "test_type.h"
 
 #include "log.h"
-
-typedef enum {
-	PORTS_TEST_TYPE_NONE = 0,
-	PORTS_TEST_TYPE_CONTACTOR_DRV,
-	PORTS_TEST_TYPE_FAN1_RLY_DRV,
-	PORTS_TEST_TYPE_VTRANS_1_12V_24,
-	PORTS_TEST_TYPE_VTRANS_2_12V_24,
-	PORTS_TEST_TYPE_BMSPOWER_PLUG1,
-	PORTS_TEST_TYPE_BMSPOWER_PLUG2,
-	PORTS_TEST_TYPE_LED_YELLOW_PLUG1,
-	PORTS_TEST_TYPE_LED_YELLOW_PLUG2,
-	PORTS_TEST_TYPE_LED_RED_PLUG1,
-	PORTS_TEST_TYPE_LED_RED_PLUG2,
-	PORTS_TEST_TYPE_LED_GREEN_POWER1,
-	PORTS_TEST_TYPE_LED_GREEN_POWER2,
-	PORTS_TEST_TYPE_CHARGING_LED_SCLK2,
-	PORTS_TEST_CHARGING_LED_LCLK2,
-	PORTS_TEST_CHARGING_LED_DS2,
-	PORTS_TEST_CHARGING_LED_SCLK1,
-	PORTS_TEST_CHARGING_LED_LCLK1,
-	PORTS_TEST_CHARGING_LED_DS1,
-	PORTS_TEST_PAR_EXT_RX1,
-	PORTS_TEST_PAR_EXT_RX2,
-	PORTS_TEST_PAR_EXT_RX3,
-	PORTS_TEST_PAR_EXT_TX1,
-	PORTS_TEST_PAR_EXT_TX2,
-	PORTS_TEST_PAR_EXT_TX3,
-} ports_test_type_t;
 
 typedef struct {
 	callback_item_t periodic_callback_item;
@@ -50,7 +23,7 @@ typedef struct {
 	uint8_t state;
 	int port_fault;
 	uint32_t stamp;
-	ports_test_type_t ports_test_type;
+	test_type_t test_type_ports;
 	GPIO_TypeDef *gpio_port;
 	uint16_t gpio_pin;
 	uint8_t gpio_state1;
@@ -59,7 +32,7 @@ typedef struct {
 } test_ports_ctx_t;
 
 typedef struct {
-	ports_test_type_t request_ports_test_type;
+	test_type_t request_test_type_ports;
 	int port_fault;
 	GPIO_TypeDef *gpio_port;
 	uint16_t gpio_pin;
@@ -69,7 +42,7 @@ typedef struct {
 
 static test_port_item_t test_port_items[] = {
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_CONTACTOR_DRV,
+		.request_test_type_ports = TEST_TYPE_PORTS_CONTACTOR_DRV,
 		.port_fault = CHANNELS_FAULT_CONTACTOR_DRV,
 		.gpio_port = CONTACTOR_DRV_GPIO_Port,
 		.gpio_pin = CONTACTOR_DRV_Pin,
@@ -77,7 +50,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_FAN1_RLY_DRV,
+		.request_test_type_ports = TEST_TYPE_PORTS_FAN1_RLY_DRV,
 		.port_fault = CHANNELS_FAULT_FAN1_RLY_DRV,
 		.gpio_port = FAN1_RLY_DRV_GPIO_Port,
 		.gpio_pin = FAN1_RLY_DRV_Pin,
@@ -85,7 +58,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_VTRANS_1_12V_24,
+		.request_test_type_ports = TEST_TYPE_PORTS_VTRANS_1_12V_24,
 		.port_fault = CHANNELS_FAULT_VTRANS_1_12V_24,
 		.gpio_port = VTRANS_1_12V_24_GPIO_Port,
 		.gpio_pin = VTRANS_1_12V_24_Pin,
@@ -93,7 +66,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_VTRANS_2_12V_24,
+		.request_test_type_ports = TEST_TYPE_PORTS_VTRANS_2_12V_24,
 		.port_fault = CHANNELS_FAULT_VTRANS_2_12V_24,
 		.gpio_port = VTRANS_2_12V_24_GPIO_Port,
 		.gpio_pin = VTRANS_2_12V_24_Pin,
@@ -101,7 +74,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_BMSPOWER_PLUG1,
+		.request_test_type_ports = TEST_TYPE_PORTS_BMSPOWER_PLUG1,
 		.port_fault = CHANNELS_FAULT_BMSPOWER_PLUG1,
 		.gpio_port = BMSPOWER_PLUG1_GPIO_Port,
 		.gpio_pin = BMSPOWER_PLUG1_Pin,
@@ -109,7 +82,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_BMSPOWER_PLUG2,
+		.request_test_type_ports = TEST_TYPE_PORTS_BMSPOWER_PLUG2,
 		.port_fault = CHANNELS_FAULT_BMSPOWER_PLUG2,
 		.gpio_port = BMSPOWER_PLUG2_GPIO_Port,
 		.gpio_pin = BMSPOWER_PLUG2_Pin,
@@ -117,7 +90,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_LED_YELLOW_PLUG1,
+		.request_test_type_ports = TEST_TYPE_PORTS_LED_YELLOW_PLUG1,
 		.port_fault = CHANNELS_FAULT_LED_YELLOW_PLUG1,
 		.gpio_port = LED_YELLOW_PLUG1_GPIO_Port,
 		.gpio_pin = LED_YELLOW_PLUG1_Pin,
@@ -125,7 +98,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_LED_YELLOW_PLUG2,
+		.request_test_type_ports = TEST_TYPE_PORTS_LED_YELLOW_PLUG2,
 		.port_fault = CHANNELS_FAULT_LED_YELLOW_PLUG2,
 		.gpio_port = LED_YELLOW_PLUG2_GPIO_Port,
 		.gpio_pin = LED_YELLOW_PLUG2_Pin,
@@ -133,7 +106,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_LED_RED_PLUG1,
+		.request_test_type_ports = TEST_TYPE_PORTS_LED_RED_PLUG1,
 		.port_fault = CHANNELS_FAULT_LED_RED_PLUG1,
 		.gpio_port = LED_RED_PLUG1_GPIO_Port,
 		.gpio_pin = LED_RED_PLUG1_Pin,
@@ -141,7 +114,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_LED_RED_PLUG2,
+		.request_test_type_ports = TEST_TYPE_PORTS_LED_RED_PLUG2,
 		.port_fault = CHANNELS_FAULT_LED_RED_PLUG2,
 		.gpio_port = LED_RED_PLUG2_GPIO_Port,
 		.gpio_pin = LED_RED_PLUG2_Pin,
@@ -149,7 +122,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_LED_GREEN_POWER1,
+		.request_test_type_ports = TEST_TYPE_PORTS_LED_GREEN_POWER1,
 		.port_fault = CHANNELS_FAULT_LED_GREEN_POWER1,
 		.gpio_port = LED_GREEN_POWER1_GPIO_Port,
 		.gpio_pin = LED_GREEN_POWER1_Pin,
@@ -157,7 +130,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_LED_GREEN_POWER2,
+		.request_test_type_ports = TEST_TYPE_PORTS_LED_GREEN_POWER2,
 		.port_fault = CHANNELS_FAULT_LED_GREEN_POWER2,
 		.gpio_port = LED_GREEN_POWER2_GPIO_Port,
 		.gpio_pin = LED_GREEN_POWER2_Pin,
@@ -165,7 +138,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_TYPE_CHARGING_LED_SCLK2,
+		.request_test_type_ports = TEST_TYPE_PORTS_CHARGING_LED_SCLK2,
 		.port_fault = CHANNELS_FAULT_CHARGING_LED_SCLK2,
 		.gpio_port = CHARGING_LED_SCLK2_GPIO_Port,
 		.gpio_pin = CHARGING_LED_SCLK2_Pin,
@@ -173,7 +146,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_CHARGING_LED_LCLK2,
+		.request_test_type_ports = TEST_TYPE_PORTS_CHARGING_LED_LCLK2,
 		.port_fault = CHANNELS_FAULT_CHARGING_LED_LCLK2,
 		.gpio_port = CHARGING_LED_LCLK2_GPIO_Port,
 		.gpio_pin = CHARGING_LED_LCLK2_Pin,
@@ -181,7 +154,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_CHARGING_LED_DS2,
+		.request_test_type_ports = TEST_TYPE_PORTS_CHARGING_LED_DS2,
 		.port_fault = CHANNELS_FAULT_CHARGING_LED_DS2,
 		.gpio_port = CHARGING_LED_DS2_GPIO_Port,
 		.gpio_pin = CHARGING_LED_DS2_Pin,
@@ -189,7 +162,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_CHARGING_LED_SCLK1,
+		.request_test_type_ports = TEST_TYPE_PORTS_CHARGING_LED_SCLK1,
 		.port_fault = CHANNELS_FAULT_CHARGING_LED_SCLK1,
 		.gpio_port = CHARGING_LED_SCLK1_GPIO_Port,
 		.gpio_pin = CHARGING_LED_SCLK1_Pin,
@@ -197,7 +170,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_CHARGING_LED_LCLK1,
+		.request_test_type_ports = TEST_TYPE_PORTS_CHARGING_LED_LCLK1,
 		.port_fault = CHANNELS_FAULT_CHARGING_LED_LCLK1,
 		.gpio_port = CHARGING_LED_LCLK1_GPIO_Port,
 		.gpio_pin = CHARGING_LED_LCLK1_Pin,
@@ -205,7 +178,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_CHARGING_LED_DS1,
+		.request_test_type_ports = TEST_TYPE_PORTS_CHARGING_LED_DS1,
 		.port_fault = CHANNELS_FAULT_CHARGING_LED_DS1,
 		.gpio_port = CHARGING_LED_DS1_GPIO_Port,
 		.gpio_pin = CHARGING_LED_DS1_Pin,
@@ -213,7 +186,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_PAR_EXT_RX1,
+		.request_test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX1,
 		.port_fault = CHANNELS_FAULT_PAR_EXT_RX1,
 		.gpio_port = PAR_EXT_RX1_GPIO_Port,
 		.gpio_pin = PAR_EXT_RX1_Pin,
@@ -221,7 +194,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_PAR_EXT_RX2,
+		.request_test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX2,
 		.port_fault = CHANNELS_FAULT_PAR_EXT_RX2,
 		.gpio_port = PAR_EXT_RX2_GPIO_Port,
 		.gpio_pin = PAR_EXT_RX2_Pin,
@@ -229,7 +202,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_PAR_EXT_RX3,
+		.request_test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX3,
 		.port_fault = CHANNELS_FAULT_PAR_EXT_RX3,
 		.gpio_port = PAR_EXT_RX3_GPIO_Port,
 		.gpio_pin = PAR_EXT_RX3_Pin,
@@ -237,7 +210,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_PAR_EXT_TX1,
+		.request_test_type_ports = TEST_TYPE_PORTS_PAR_EXT_TX1,
 		.port_fault = CHANNELS_FAULT_PAR_EXT_TX1,
 		.gpio_port = PAR_EXT_TX1_GPIO_Port,
 		.gpio_pin = PAR_EXT_TX1_Pin,
@@ -245,7 +218,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_PAR_EXT_TX2,
+		.request_test_type_ports = TEST_TYPE_PORTS_PAR_EXT_TX2,
 		.port_fault = CHANNELS_FAULT_PAR_EXT_TX2,
 		.gpio_port = PAR_EXT_TX2_GPIO_Port,
 		.gpio_pin = PAR_EXT_TX2_Pin,
@@ -253,7 +226,7 @@ static test_port_item_t test_port_items[] = {
 		.gpio_state2 = GPIO_PIN_SET,
 	},
 	{
-		.request_ports_test_type = PORTS_TEST_PAR_EXT_TX3,
+		.request_test_type_ports = TEST_TYPE_PORTS_PAR_EXT_TX3,
 		.port_fault = CHANNELS_FAULT_PAR_EXT_TX3,
 		.gpio_port = PAR_EXT_TX3_GPIO_Port,
 		.gpio_pin = PAR_EXT_TX3_Pin,
@@ -266,7 +239,7 @@ static int do_port_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 {
 	int ret = 1;
 
-	if(ctx->ports_test_type == PORTS_TEST_TYPE_NONE) {
+	if(ctx->test_type_ports == TEST_TYPE_PORTS_NONE) {
 		return ret;
 	}
 
@@ -281,7 +254,7 @@ static int do_port_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 		case 1: {
 			uint16_t value;
 
-			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, ctx->ports_test_type, 1, &value, 3) == 0) {
+			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, ctx->test_type_ports, 1, &value, 3) == 0) {
 				if(value == ctx->gpio_state1) {
 					ctx->state = 2;
 				} else {
@@ -307,7 +280,7 @@ static int do_port_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 		case 3: {
 			uint16_t value;
 
-			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, ctx->ports_test_type, 1, &value, 3) == 0) {
+			if(modbus_master_read_items_retry(ctx->modbus_master_info, 1, ctx->test_type_ports, 1, &value, 3) == 0) {
 				if(value == ctx->gpio_state2) {
 					ret = 0;
 				} else {
@@ -336,7 +309,7 @@ void handle_ports_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 {
 	test_port_item_t *test_port_item;
 
-	if(ctx->ports_test_type != PORTS_TEST_TYPE_NONE) {
+	if(ctx->test_type_ports != TEST_TYPE_PORTS_NONE) {
 		return;
 	}
 
@@ -351,7 +324,7 @@ void handle_ports_test(test_ports_ctx_t *ctx, channels_info_t *channels_info)
 	test_port_item = &test_port_items[ctx->index];
 
 	ctx->state = 0;
-	ctx->ports_test_type = test_port_item->request_ports_test_type;
+	ctx->test_type_ports = test_port_item->request_test_type_ports;
 	ctx->port_fault = test_port_item->port_fault;
 	ctx->gpio_port = test_port_item->gpio_port;
 	ctx->gpio_pin = test_port_item->gpio_pin;
@@ -369,10 +342,10 @@ static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 
 	if(ret == -1) {
 		set_fault(channels_info->faults, ctx->port_fault, 1);
-		ctx->ports_test_type = PORTS_TEST_TYPE_NONE;
+		ctx->test_type_ports = TEST_TYPE_PORTS_NONE;
 	} else if(ret == 0) {
 		set_fault(channels_info->faults, ctx->port_fault, 0);
-		ctx->ports_test_type = PORTS_TEST_TYPE_NONE;
+		ctx->test_type_ports = TEST_TYPE_PORTS_NONE;
 	}
 
 	handle_ports_test(ctx, channels_info);
