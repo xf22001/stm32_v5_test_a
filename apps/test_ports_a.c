@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月04日 星期一 17时13分12秒
+ *   修改日期：2022年07月05日 星期二 14时06分09秒
  *   描    述：
  *
  *================================================================*/
@@ -283,7 +283,6 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 				if(value == test_ports_output_ctx->gpio_state1) {
 					test_ports_output_ctx->state = 2;
 				} else {
-					ret = -1;
 				}
 			} else {
 				ret = -1;
@@ -309,7 +308,6 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 				if(value == test_ports_output_ctx->gpio_state2) {
 					ret = 0;
 				} else {
-					ret = -1;
 				}
 			} else {
 				ret = -1;
@@ -583,23 +581,21 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 
 	switch(test_ports_input_ctx->state) {
 		case 0: {
-			HAL_GPIO_WritePin(test_ports_input_ctx->gpio_port, test_ports_input_ctx->gpio_pin, GPIO_PIN_RESET);
+			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, test_ports_input_ctx->test_type_ports, 1, 3) == 0) {
+				test_ports_input_ctx->state = 1;
+			} else {
+				ret = -1;
+			}
+
 			test_ports_input_ctx->stamp = osKernelSysTick();
 			test_ports_input_ctx->state = 1;
 		}
 		break;
 
 		case 1: {
-			uint16_t value;
-
-			if(modbus_master_read_items_retry(channels_info->modbus_master_info, 1, test_ports_input_ctx->test_type_ports, 1, &value, 3) == 0) {
-				if(value == test_ports_input_ctx->gpio_state1) {
-					test_ports_input_ctx->state = 2;
-				} else {
-					ret = -1;
-				}
+			if(HAL_GPIO_ReadPin(test_ports_input_ctx->gpio_port, test_ports_input_ctx->gpio_pin) == test_ports_input_ctx->gpio_state1) {
+				test_ports_input_ctx->state = 2;
 			} else {
-				ret = -1;
 			}
 
 			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
@@ -609,23 +605,21 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 		break;
 
 		case 2: {
-			HAL_GPIO_WritePin(test_ports_input_ctx->gpio_port, test_ports_input_ctx->gpio_pin, GPIO_PIN_SET);
+			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, test_ports_input_ctx->test_type_ports, 0, 3) == 0) {
+				test_ports_input_ctx->state = 3;
+			} else {
+				ret = -1;
+			}
+
 			test_ports_input_ctx->stamp = osKernelSysTick();
-			test_ports_input_ctx->state = 3;
+			test_ports_input_ctx->state = 1;
 		}
 		break;
 
 		case 3: {
-			uint16_t value;
-
-			if(modbus_master_read_items_retry(channels_info->modbus_master_info, 1, test_ports_input_ctx->test_type_ports, 1, &value, 3) == 0) {
-				if(value == test_ports_input_ctx->gpio_state2) {
-					ret = 0;
-				} else {
-					ret = -1;
-				}
+			if(HAL_GPIO_ReadPin(test_ports_input_ctx->gpio_port, test_ports_input_ctx->gpio_pin) == test_ports_input_ctx->gpio_state2) {
+				ret = 0;
 			} else {
-				ret = -1;
 			}
 
 			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
@@ -689,7 +683,6 @@ static void ports_input_test_periodic(test_ports_ctx_t *test_ports_ctx, channels
 
 	handle_next_ports_input_test(test_ports_input_ctx, channels_info);
 }
-
 
 static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 {
