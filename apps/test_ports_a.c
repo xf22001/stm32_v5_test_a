@@ -6,15 +6,19 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月05日 星期二 14时06分09秒
+ *   修改日期：2022年07月06日 星期三 11时27分36秒
  *   描    述：
  *
  *================================================================*/
 #include "test_ports_a.h"
 #include "main.h"
 #include "test_type.h"
+#include "hw_adc.h"
 
 #include "log.h"
+
+extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc3;
 
 typedef struct {
 	int index;
@@ -43,9 +47,29 @@ typedef struct {
 } test_ports_input_ctx_t;
 
 typedef struct {
+	int index;
+
+	test_type_t test_type_ports;
+	void *cp_ad_adc;
+	uint8_t cp_ad_adc_rank;
+} test_ports_cc1_ctx_t;
+
+typedef struct {
+	int index;
+
+	test_type_t test_type_ports;
+	void *charge_voltage_adc;
+	uint8_t charge_voltage_adc_rank;
+	void *battery_voltage_adc;
+	uint8_t battery_voltage_adc_rank;
+} test_ports_voltage_ctx_t;
+
+typedef struct {
 	callback_item_t periodic_callback_item;
 	test_ports_output_ctx_t test_ports_output_ctx;
 	test_ports_input_ctx_t test_ports_input_ctx;
+	test_ports_cc1_ctx_t test_ports_cc1_ctx;
+	test_ports_voltage_ctx_t test_ports_voltage_ctx;
 } test_ports_ctx_t;
 
 typedef struct {
@@ -684,6 +708,269 @@ static void ports_input_test_periodic(test_ports_ctx_t *test_ports_ctx, channels
 	handle_next_ports_input_test(test_ports_input_ctx, channels_info);
 }
 
+/* 11.2 - 12.8
+ * 5.2 - 6.8
+ * 3.2 - 4.8
+ */
+#define CP_AD_VOLTAGE_CONNECT_OFF_UP 1280
+#define CP_AD_VOLTAGE_CONNECT_OFF_DOWN 1120
+#define CP_AD_VOLTAGE_CONNECT_ON_LOCK_OFF_UP 680
+#define CP_AD_VOLTAGE_CONNECT_ON_LOCK_OFF_DOWN 520
+#define CP_AD_VOLTAGE_CONNECT_ON_LOCK_ON_UP 480
+#define CP_AD_VOLTAGE_CONNECT_ON_LOCK_ON_DOWN 320
+
+typedef enum {
+	CP_AD_CONNECT_TYPE_INVALID = 0,
+	CP_AD_CONNECT_TYPE_CONNECT_OFF,
+	CP_AD_CONNECT_TYPE_CONNECT_ON_LOCK_OFF,
+	CP_AD_CONNECT_TYPE_CONNECT_ON,
+} cp_ad_connect_type_t;
+
+typedef struct {
+	test_type_t request_test_type_ports;
+	void *cp_ad_adc;
+	uint8_t cp_ad_adc_rank;
+} channel_cc1_adc_item_t;
+
+static channel_cc1_adc_item_t channel_cc1_adc_items[] = {
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_CHANNEL0_CC1,
+		.cp_ad_adc = &hadc1,
+		.cp_ad_adc_rank = 0,
+	},
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_CHANNEL1_CC1,
+		.cp_ad_adc = &hadc1,
+		.cp_ad_adc_rank = 1,
+	},
+};
+
+static uint8_t do_ports_cc1_test(test_ports_cc1_ctx_t *test_ports_cc1_ctx, channels_info_t *channels_info)
+{
+	adc_info_t *adc_info = NULL;
+	uint8_t charger_connect_type;//cp_ad_connect_type_t
+	uint8_t charger_connect_state;
+	uint16_t cp_ad;
+	uint16_t cp_ad_voltage;
+
+	adc_info = get_or_alloc_adc_info(test_ports_cc1_ctx->cp_ad_adc);
+
+	cp_ad = get_adc_value(adc_info, test_ports_cc1_ctx->cp_ad_adc_rank);
+
+	//debug("channel %d cp ad:%d", test_ports_cc1_ctx->index, cp_ad);
+
+	cp_ad_voltage = cp_ad * 3300 / 4096;//0v-1.2v 采样 0v-12v
+
+	//(V - 0.5) * 2 / 102 * 8 * 4 / 3 = u
+	//V - 0.5 = u / (2 / 102 * 8 * 4 / 3)
+	//修正前
+	//V = u / (2 / 102 * 8 * 4 / 3) + 0.5
+	//修正后
+	//V = u / (1.8667 / 101.8667 * 8 * 4 / 3) + 0.5
+
+	cp_ad_voltage = cp_ad_voltage * 5.1159817458616805 / 10 + 50;
+
+	//debug("channel %d cp ad voltage:%d", channel_info->channel_id, cp_ad_voltage);
+
+	if(cp_ad_voltage > CP_AD_VOLTAGE_CONNECT_OFF_UP) {
+		charger_connect_type = CP_AD_CONNECT_TYPE_INVALID;
+		charger_connect_state = 0;
+	} else if(cp_ad_voltage >= CP_AD_VOLTAGE_CONNECT_OFF_DOWN) {
+		charger_connect_type = CP_AD_CONNECT_TYPE_CONNECT_OFF;
+		charger_connect_state = 0;
+	} else if(cp_ad_voltage > CP_AD_VOLTAGE_CONNECT_ON_LOCK_OFF_UP) {
+		charger_connect_type = CP_AD_CONNECT_TYPE_INVALID;
+		charger_connect_state = 0;
+	} else if(cp_ad_voltage >= CP_AD_VOLTAGE_CONNECT_ON_LOCK_OFF_DOWN) {
+		charger_connect_type = CP_AD_CONNECT_TYPE_CONNECT_ON_LOCK_OFF;
+		charger_connect_state = 0;
+	} else if(cp_ad_voltage > CP_AD_VOLTAGE_CONNECT_ON_LOCK_ON_UP) {
+		charger_connect_type = CP_AD_CONNECT_TYPE_INVALID;
+		charger_connect_state = 0;
+	} else if(cp_ad_voltage >= CP_AD_VOLTAGE_CONNECT_ON_LOCK_ON_DOWN) {
+		charger_connect_type = CP_AD_CONNECT_TYPE_CONNECT_ON;
+		charger_connect_state = 1;
+	} else {
+		charger_connect_type = CP_AD_CONNECT_TYPE_INVALID;
+		charger_connect_state = 0;
+	}
+
+	charger_connect_type = charger_connect_type;
+
+	return charger_connect_state;
+}
+
+void handle_next_ports_cc1_test(test_ports_cc1_ctx_t *test_ports_cc1_ctx, channels_info_t *channels_info)
+{
+	channel_cc1_adc_item_t *channel_cc1_adc_item;
+
+	if(test_ports_cc1_ctx->test_type_ports != TEST_TYPE_PORTS_NONE) {
+		return;
+	}
+
+	if(ARRAY_SIZE(channel_cc1_adc_items) <= 0) {
+		return;
+	}
+
+	channel_cc1_adc_item = &channel_cc1_adc_items[test_ports_cc1_ctx->index];
+
+	test_ports_cc1_ctx->index++;
+
+	if(test_ports_cc1_ctx->index >= ARRAY_SIZE(channel_cc1_adc_items)) {
+		test_ports_cc1_ctx->index = 0;
+	}
+
+	test_ports_cc1_ctx->test_type_ports = channel_cc1_adc_item->request_test_type_ports;
+	test_ports_cc1_ctx->cp_ad_adc = channel_cc1_adc_item->cp_ad_adc;
+	test_ports_cc1_ctx->cp_ad_adc_rank = channel_cc1_adc_item->cp_ad_adc_rank;
+}
+
+static void ports_cc1_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_info_t *channels_info)
+{
+	test_ports_cc1_ctx_t *test_ports_cc1_ctx = &test_ports_ctx->test_ports_cc1_ctx;
+	uint8_t ret;
+
+	ret = do_ports_cc1_test(test_ports_cc1_ctx, channels_info);
+
+	switch(test_ports_cc1_ctx->index) {
+		case 0: {
+			channels_info->channel0_cc1 = ret;
+		}
+		break;
+
+		case 1: {
+			channels_info->channel1_cc1 = ret;
+		}
+		break;
+
+		default: {
+		}
+		break;
+	}
+
+	test_ports_cc1_ctx->test_type_ports = TEST_TYPE_PORTS_NONE;
+
+	handle_next_ports_cc1_test(test_ports_cc1_ctx, channels_info);
+}
+
+typedef struct {
+	test_type_t request_test_type_ports;
+	void *charge_voltage_adc;
+	uint8_t charge_voltage_adc_rank;
+	void *battery_voltage_adc;
+	uint8_t battery_voltage_adc_rank;
+} channel_voltage_adc_item_t;
+
+static channel_voltage_adc_item_t channel_voltage_adc_items[] = {
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_CHANNEL0_VOLTAGE,
+		.charge_voltage_adc = &hadc3,
+		.charge_voltage_adc_rank = 2,
+		.battery_voltage_adc = &hadc3,
+		.battery_voltage_adc_rank = 10,
+	},
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_CHANNEL1_VOLTAGE,
+		.charge_voltage_adc = &hadc3,
+		.charge_voltage_adc_rank = 6,
+		.battery_voltage_adc = &hadc3,
+		.battery_voltage_adc_rank = 7,
+	},
+};
+
+typedef struct {
+	uint16_t charger_voltage;//0.1v
+	uint16_t battery_voltage;//0.1v
+} voltage_info_t;
+
+static voltage_info_t do_ports_voltage_test(test_ports_voltage_ctx_t *test_ports_voltage_ctx, channels_info_t *channels_info)
+{
+	adc_info_t *charge_voltage_adc_info = get_or_alloc_adc_info(test_ports_voltage_ctx->charge_voltage_adc);
+	adc_info_t *battery_voltage_adc_info = get_or_alloc_adc_info(test_ports_voltage_ctx->battery_voltage_adc);
+	uint16_t charge_voltage_ad = 0;
+	uint16_t battery_voltage_ad = 0;
+	float charge_voltage = 0.0;
+	float battery_voltage = 0.0;
+	voltage_info_t voltage_info = {0};
+
+	charge_voltage_ad = get_adc_value(charge_voltage_adc_info,
+	                                  test_ports_voltage_ctx->charge_voltage_adc_rank);
+	//debug("channel %d charge voltage ad:%d", test_ports_voltage_ctx->index, charge_voltage_ad);
+	charge_voltage = charge_voltage_ad * 3.3 / 4096;
+	//debug("channel %d charge voltage:%f", test_ports_voltage_ctx->index, charge_voltage);
+	charge_voltage = charge_voltage * 499 * 7;
+	//debug("channel %d charge voltage:%f", test_ports_voltage_ctx->index, charge_voltage);
+	voltage_info.charger_voltage = charge_voltage;
+	//debug("channel %d charge voltage:%d", test_ports_voltage_ctx->index, voltage_info.charger_voltage);
+
+	battery_voltage_ad = get_adc_value(battery_voltage_adc_info,
+	                                   test_ports_voltage_ctx->battery_voltage_adc_rank);
+	//debug("channel %d battery voltage ad:%d", test_ports_voltage_ctx->index, battery_voltage_ad);
+	battery_voltage = battery_voltage_ad * 3.3 / 4096;
+	//debug("channel %d battery voltage:%f", test_ports_voltage_ctx->index, battery_voltage);
+	battery_voltage = (battery_voltage - 1.49) * 2 * 3493;
+	//debug("channel %d battery voltage:%f", test_ports_voltage_ctx->index, battery_voltage);
+	voltage_info.battery_voltage = battery_voltage;
+	//debug("channel %d battery voltage:%d", test_ports_voltage_ctx->index, voltage_info.battery_voltage);
+
+	return voltage_info;
+}
+
+void handle_next_ports_voltage_test(test_ports_voltage_ctx_t *test_ports_voltage_ctx, channels_info_t *channels_info)
+{
+	channel_voltage_adc_item_t *channel_voltage_adc_item;
+
+	if(test_ports_voltage_ctx->test_type_ports != TEST_TYPE_PORTS_NONE) {
+		return;
+	}
+
+	if(ARRAY_SIZE(channel_cc1_adc_items) <= 0) {
+		return;
+	}
+
+	channel_voltage_adc_item = &channel_voltage_adc_items[test_ports_voltage_ctx->index];
+
+	test_ports_voltage_ctx->index++;
+
+	if(test_ports_voltage_ctx->index >= ARRAY_SIZE(channel_voltage_adc_items)) {
+		test_ports_voltage_ctx->index = 0;
+	}
+
+	test_ports_voltage_ctx->test_type_ports = channel_voltage_adc_item->request_test_type_ports;
+	test_ports_voltage_ctx->charge_voltage_adc = channel_voltage_adc_item->charge_voltage_adc;
+	test_ports_voltage_ctx->charge_voltage_adc_rank = channel_voltage_adc_item->charge_voltage_adc_rank;
+	test_ports_voltage_ctx->battery_voltage_adc = channel_voltage_adc_item->battery_voltage_adc;
+	test_ports_voltage_ctx->battery_voltage_adc_rank = channel_voltage_adc_item->battery_voltage_adc_rank;
+}
+
+static void ports_voltage_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_info_t *channels_info)
+{
+	test_ports_voltage_ctx_t *test_ports_voltage_ctx = &test_ports_ctx->test_ports_voltage_ctx;
+	voltage_info_t voltage_info = {0};
+
+	voltage_info = do_ports_voltage_test(test_ports_voltage_ctx, channels_info);
+
+	switch(test_ports_voltage_ctx->index) {
+		case 0: {
+			channels_info->charger_voltage = voltage_info.charger_voltage;
+		}
+		break;
+
+		case 1: {
+			channels_info->battery_voltage = voltage_info.battery_voltage;
+		}
+		break;
+
+		default: {
+		}
+		break;
+	}
+
+	test_ports_voltage_ctx->test_type_ports = TEST_TYPE_PORTS_NONE;
+
+	handle_next_ports_voltage_test(test_ports_voltage_ctx, channels_info);
+}
+
 static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 {
 	test_ports_ctx_t *test_ports_ctx = (test_ports_ctx_t *)fn_ctx;
@@ -691,6 +978,8 @@ static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 
 	ports_output_test_periodic(test_ports_ctx, channels_info);
 	ports_input_test_periodic(test_ports_ctx, channels_info);
+	ports_cc1_test_periodic(test_ports_ctx, channels_info);
+	ports_voltage_test_periodic(test_ports_ctx, channels_info);
 }
 
 void start_ports_tests(channels_info_t *channels_info)

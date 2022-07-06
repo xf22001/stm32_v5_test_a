@@ -6,7 +6,7 @@
  *   文件名称：channels.h
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 10时08分44秒
- *   修改日期：2022年07月04日 星期一 16时46分58秒
+ *   修改日期：2022年07月06日 星期三 11时14分43秒
  *   描    述：
  *
  *================================================================*/
@@ -146,6 +146,11 @@ typedef struct {
 	void *uart5;
 
 	modbus_master_info_t *modbus_master_info;
+	uint8_t channel0_cc1;
+	uint8_t channel1_cc1;
+
+	uint16_t charger_voltage;//0.1v
+	uint16_t battery_voltage;//0.1v
 } channels_info_t;
 
 char *get_channels_event_type_des(channels_event_type_t type);

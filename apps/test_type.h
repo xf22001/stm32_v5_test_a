@@ -6,7 +6,7 @@
  *   文件名称：test_type.h
  *   创 建 者：肖飞
  *   创建日期：2022年06月01日 星期三 16时58分26秒
- *   修改日期：2022年07月04日 星期一 16时46分52秒
+ *   修改日期：2022年07月06日 星期三 11时04分41秒
  *   描    述：
  *
  *================================================================*/
@@ -71,6 +71,11 @@ typedef enum {
 	TEST_TYPE_PORTS_PAR_EXT_RX3,
 	TEST_TYPE_PORTS_PLUG1_LOCK_BACK,
 	TEST_TYPE_PORTS_PLUG2_LOCK_BACK,
+
+	TEST_TYPE_PORTS_CHANNEL0_CC1,
+	TEST_TYPE_PORTS_CHANNEL1_CC1,
+	TEST_TYPE_PORTS_CHANNEL0_VOLTAGE,
+	TEST_TYPE_PORTS_CHANNEL1_VOLTAGE,
 } test_type_t;
 
 #ifdef __cplusplus
