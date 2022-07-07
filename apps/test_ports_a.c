@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月06日 星期三 11时27分36秒
+ *   修改日期：2022年07月07日 星期四 14时58分13秒
  *   描    述：
  *
  *================================================================*/
@@ -14,6 +14,7 @@
 #include "main.h"
 #include "test_type.h"
 #include "hw_adc.h"
+#include "pt_temperature.h"
 
 #include "log.h"
 
@@ -65,11 +66,20 @@ typedef struct {
 } test_ports_voltage_ctx_t;
 
 typedef struct {
+	int index;
+
+	test_type_t test_type_ports;
+	void *temperature_adc;
+	uint8_t temperature_adc_rank;
+} test_ports_temperature_ctx_t;
+
+typedef struct {
 	callback_item_t periodic_callback_item;
 	test_ports_output_ctx_t test_ports_output_ctx;
 	test_ports_input_ctx_t test_ports_input_ctx;
 	test_ports_cc1_ctx_t test_ports_cc1_ctx;
 	test_ports_voltage_ctx_t test_ports_voltage_ctx;
+	test_ports_temperature_ctx_t test_ports_temperature_ctx;
 } test_ports_ctx_t;
 
 typedef struct {
@@ -833,13 +843,8 @@ static void ports_cc1_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_i
 	ret = do_ports_cc1_test(test_ports_cc1_ctx, channels_info);
 
 	switch(test_ports_cc1_ctx->index) {
-		case 0: {
-			channels_info->channel0_cc1 = ret;
-		}
-		break;
-
-		case 1: {
-			channels_info->channel1_cc1 = ret;
+		case 0 ... 1: {
+			channels_info->channel_cc1[test_ports_cc1_ctx->index] = ret;
 		}
 		break;
 
@@ -924,7 +929,7 @@ void handle_next_ports_voltage_test(test_ports_voltage_ctx_t *test_ports_voltage
 		return;
 	}
 
-	if(ARRAY_SIZE(channel_cc1_adc_items) <= 0) {
+	if(ARRAY_SIZE(channel_voltage_adc_items) <= 0) {
 		return;
 	}
 
@@ -951,13 +956,9 @@ static void ports_voltage_test_periodic(test_ports_ctx_t *test_ports_ctx, channe
 	voltage_info = do_ports_voltage_test(test_ports_voltage_ctx, channels_info);
 
 	switch(test_ports_voltage_ctx->index) {
-		case 0: {
-			channels_info->charger_voltage = voltage_info.charger_voltage;
-		}
-		break;
-
-		case 1: {
-			channels_info->battery_voltage = voltage_info.battery_voltage;
+		case 0 ... 1: {
+			channels_info->charger_voltage[test_ports_voltage_ctx->index] = voltage_info.charger_voltage;
+			channels_info->battery_voltage[test_ports_voltage_ctx->index] = voltage_info.battery_voltage;
 		}
 		break;
 
@@ -971,6 +972,97 @@ static void ports_voltage_test_periodic(test_ports_ctx_t *test_ports_ctx, channe
 	handle_next_ports_voltage_test(test_ports_voltage_ctx, channels_info);
 }
 
+typedef struct {
+	test_type_t request_test_type_ports;
+	void *temperature_adc;
+	uint8_t temperature_adc_rank;
+} temperature_adc_item_t;
+
+static temperature_adc_item_t temperature_adc_items[] = {
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_TEMPERATURE_1,
+		.temperature_adc = &hadc3,
+		.temperature_adc_rank = 5,
+	},
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_TEMPERATURE_2,
+		.temperature_adc = &hadc3,
+		.temperature_adc_rank = 9,
+	},
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_TEMPERATURE_3,
+		.temperature_adc = &hadc3,
+		.temperature_adc_rank = 1,
+	},
+	{
+		.request_test_type_ports = TEST_TYPE_PORTS_TEMPERATURE_4,
+		.temperature_adc = &hadc3,
+		.temperature_adc_rank = 0,
+	},
+};
+
+static int16_t do_ports_temperature_test(test_ports_temperature_ctx_t *test_ports_temperature_ctx, channels_info_t *channels_info)
+{
+	adc_info_t *temperature_adc_info = get_or_alloc_adc_info(test_ports_temperature_ctx->temperature_adc);
+	uint16_t temperature_ad = 0;
+	int16_t temperature = 0;
+
+	temperature_ad = get_adc_value(temperature_adc_info,
+	                               test_ports_temperature_ctx->temperature_adc_rank);
+
+	temperature = get_pt_temperature(1000, temperature_ad, 4095);
+
+	return temperature;
+}
+
+void handle_next_ports_temperature_test(test_ports_temperature_ctx_t *test_ports_temperature_ctx, channels_info_t *channels_info)
+{
+	temperature_adc_item_t *temperature_adc_item;
+
+	if(test_ports_temperature_ctx->test_type_ports != TEST_TYPE_PORTS_NONE) {
+		return;
+	}
+
+	if(ARRAY_SIZE(temperature_adc_items) <= 0) {
+		return;
+	}
+
+	temperature_adc_item = &temperature_adc_items[test_ports_temperature_ctx->index];
+
+	test_ports_temperature_ctx->index++;
+
+	if(test_ports_temperature_ctx->index >= ARRAY_SIZE(temperature_adc_items)) {
+		test_ports_temperature_ctx->index = 0;
+	}
+
+	test_ports_temperature_ctx->test_type_ports = temperature_adc_item->request_test_type_ports;
+	test_ports_temperature_ctx->temperature_adc = temperature_adc_item->temperature_adc;
+	test_ports_temperature_ctx->temperature_adc_rank = temperature_adc_item->temperature_adc_rank;
+}
+
+static void ports_temperature_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_info_t *channels_info)
+{
+	test_ports_temperature_ctx_t *test_ports_temperature_ctx = &test_ports_ctx->test_ports_temperature_ctx;
+	int16_t temperature = 0;
+
+	temperature = do_ports_temperature_test(test_ports_temperature_ctx, channels_info);
+
+	switch(test_ports_temperature_ctx->index) {
+		case 0 ... 3: {
+			channels_info->temperature[test_ports_temperature_ctx->index] = temperature;
+		}
+		break;
+
+		default: {
+		}
+		break;
+	}
+
+	test_ports_temperature_ctx->test_type_ports = TEST_TYPE_PORTS_NONE;
+
+	handle_next_ports_temperature_test(test_ports_temperature_ctx, channels_info);
+}
+
 static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 {
 	test_ports_ctx_t *test_ports_ctx = (test_ports_ctx_t *)fn_ctx;
@@ -980,6 +1072,7 @@ static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 	ports_input_test_periodic(test_ports_ctx, channels_info);
 	ports_cc1_test_periodic(test_ports_ctx, channels_info);
 	ports_voltage_test_periodic(test_ports_ctx, channels_info);
+	ports_temperature_test_periodic(test_ports_ctx, channels_info);
 }
 
 void start_ports_tests(channels_info_t *channels_info)
