@@ -6,7 +6,7 @@
 #   文件名称：user.mk
 #   创 建 者：肖飞
 #   创建日期：2019年10月25日 星期五 13时04分38秒
-#   修改日期：2022年07月07日 星期四 14时58分29秒
+#   修改日期：2022年07月08日 星期五 09时16分30秒
 #   描    述：
 #
 #================================================================
@@ -15,6 +15,8 @@ include config.mk
 
 ifndef_any_of = $(filter undefined,$(foreach v,$(1),$(origin $(addprefix CONFIG_,$(v)))))
 ifdef_any_of = $(filter-out undefined,$(foreach v,$(1),$(origin $(addprefix CONFIG_,$(v)))))
+
+include sal/sal.mk
 
 USER_C_INCLUDES += -Iapps
 USER_C_INCLUDES += -Iapps/modules
@@ -29,11 +31,27 @@ USER_C_INCLUDES += -Iapps/modules/hardware
 USER_C_INCLUDES += -Iapps/modules/app
 USER_C_INCLUDES += -Iapps/modules/tests
 
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/system
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/netif/ppp
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/lwip
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/lwip/apps
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/lwip/priv
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/lwip/prot
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/netif
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/compat/posix
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/compat/posix/arpa
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/compat/posix/net
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/compat/posix/sys
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/src/include/compat/stdc
+USER_C_INCLUDES += -IMiddlewares/Third_Party/LwIP/system/arch
+
 USER_C_SOURCES += apps/os_memory.c
 USER_C_SOURCES += apps/os_random.c
 USER_C_SOURCES += apps/local_time.c
 USER_C_SOURCES += apps/app.c
 USER_C_SOURCES += apps/uart_debug_handler.c
+USER_C_SOURCES += apps/probe_tool_handler.c
 USER_C_SOURCES += apps/can_config.c
 USER_C_SOURCES += apps/channels_config.c
 USER_C_SOURCES += apps/channels.c
@@ -44,6 +62,7 @@ ifneq ($(call ifdef_any_of,SPI_CAN),)
 USER_C_SOURCES += apps/exti.c
 endif
 USER_C_SOURCES += apps/channels_addr_handler.c
+USER_C_SOURCES += apps/wiznet_spi.c
 
 USER_C_SOURCES += apps/modules/app/uart_debug.c
 USER_C_SOURCES += apps/modules/app/can_data_task.c
@@ -54,10 +73,15 @@ USER_C_SOURCES += apps/modules/app/connect_state.c
 USER_C_SOURCES += apps/modules/app/can_command.c
 USER_C_SOURCES += apps/modules/app/display.c
 USER_C_SOURCES += apps/modules/app/pt_temperature.c
+USER_C_SOURCES += apps/modules/app/probe_tool.c
+USER_C_SOURCES += apps/modules/app/request.c
+USER_C_SOURCES += apps/modules/app/poll_loop.c
+USER_C_SOURCES += apps/modules/app/ntp_client.c
 USER_C_SOURCES += apps/modules/hardware/modbus_master_txrx.c
 USER_C_SOURCES += apps/modules/hardware/modbus_slave_txrx.c
 USER_C_SOURCES += apps/modules/hardware/modbus_spec.c
 USER_C_SOURCES += apps/modules/hardware/hw_adc.c
+USER_C_SOURCES += apps/modules/hardware/hw_rtc.c
 USER_C_SOURCES += apps/modules/drivers/spi_txrx.c
 USER_C_SOURCES += apps/modules/drivers/can_txrx.c
 USER_C_SOURCES += apps/modules/drivers/can_ops_hal.c
@@ -71,6 +95,7 @@ USER_C_SOURCES += apps/modules/os/callback_chain.c
 USER_C_SOURCES += apps/modules/os/bitmap_ops.c
 USER_C_SOURCES += apps/modules/os/os_utils.c
 USER_C_SOURCES += apps/modules/os/cpu_utils.c
+USER_C_SOURCES += apps/modules/os/net_utils.c
 USER_C_SOURCES += apps/modules/os/log.c
 USER_C_SOURCES += apps/modules/os/object_class.c
 USER_C_SOURCES += apps/modules/os/soft_timer.c
@@ -80,6 +105,10 @@ USER_C_SOURCES += apps/modules/tests/test_serial.c
 USER_C_SOURCES += apps/modules/tests/test_event.c
 USER_C_SOURCES += apps/modules/tests/test_storage.c
 USER_C_SOURCES += apps/modules/tests/test_can.c
+
+USER_C_SOURCES += Middlewares/Third_Party/LwIP/src/core/def.c
+USER_C_SOURCES += Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_addr.c
+USER_C_SOURCES += Src/net_sockets.c
 
 USER_CFLAGS += -DtraceTASK_SWITCHED_IN=StartIdleMonitor -DtraceTASK_SWITCHED_OUT=EndIdleMonitor
 USER_CFLAGS += -DSAL_HOOK

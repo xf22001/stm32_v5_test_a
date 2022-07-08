@@ -6,7 +6,7 @@
  *   文件名称：app.h
  *   创 建 者：肖飞
  *   创建日期：2019年10月11日 星期五 16时56分29秒
- *   修改日期：2022年03月23日 星期三 12时00分33秒
+ *   修改日期：2022年07月08日 星期五 08时46分57秒
  *   描    述：
  *
  *================================================================*/
@@ -71,15 +71,11 @@ typedef enum {
 } app_event_t;
 
 app_info_t *get_app_info(void);
-int app_load_config(void);
-int app_save_config(void);
 void app_init(void);
 void send_app_event(app_event_t event, uint32_t timeout);
 void load_app_display_cache(app_info_t *app_info);
 void sync_app_display_cache(app_info_t *app_info);
-void update_network_ip_config(app_info_t *app_info);
-void app_set_reset_config(void);
-uint8_t app_get_reset_config(void);
+void update_network_ip_config(void);
 void app(void const *argument);
 void idle(void const *argument);
 

@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月07日 星期四 14时58分13秒
+ *   修改日期：2022年07月08日 星期五 09时10分52秒
  *   描    述：
  *
  *================================================================*/
@@ -759,9 +759,13 @@ static uint8_t do_ports_cc1_test(test_ports_cc1_ctx_t *test_ports_cc1_ctx, chann
 {
 	adc_info_t *adc_info = NULL;
 	uint8_t charger_connect_type;//cp_ad_connect_type_t
-	uint8_t charger_connect_state;
+	uint8_t charger_connect_state = 0;
 	uint16_t cp_ad;
 	uint16_t cp_ad_voltage;
+
+	if(test_ports_cc1_ctx->test_type_ports == TEST_TYPE_PORTS_NONE) {
+		return charger_connect_state;
+	}
 
 	adc_info = get_or_alloc_adc_info(test_ports_cc1_ctx->cp_ad_adc);
 
@@ -890,14 +894,19 @@ typedef struct {
 
 static voltage_info_t do_ports_voltage_test(test_ports_voltage_ctx_t *test_ports_voltage_ctx, channels_info_t *channels_info)
 {
-	adc_info_t *charge_voltage_adc_info = get_or_alloc_adc_info(test_ports_voltage_ctx->charge_voltage_adc);
-	adc_info_t *battery_voltage_adc_info = get_or_alloc_adc_info(test_ports_voltage_ctx->battery_voltage_adc);
+	adc_info_t *charge_voltage_adc_info;
+	adc_info_t *battery_voltage_adc_info;
 	uint16_t charge_voltage_ad = 0;
 	uint16_t battery_voltage_ad = 0;
 	float charge_voltage = 0.0;
 	float battery_voltage = 0.0;
 	voltage_info_t voltage_info = {0};
 
+	if(test_ports_voltage_ctx->test_type_ports == TEST_TYPE_PORTS_NONE) {
+		return voltage_info;
+	}
+
+	charge_voltage_adc_info = get_or_alloc_adc_info(test_ports_voltage_ctx->charge_voltage_adc);
 	charge_voltage_ad = get_adc_value(charge_voltage_adc_info,
 	                                  test_ports_voltage_ctx->charge_voltage_adc_rank);
 	//debug("channel %d charge voltage ad:%d", test_ports_voltage_ctx->index, charge_voltage_ad);
@@ -908,6 +917,7 @@ static voltage_info_t do_ports_voltage_test(test_ports_voltage_ctx_t *test_ports
 	voltage_info.charger_voltage = charge_voltage;
 	//debug("channel %d charge voltage:%d", test_ports_voltage_ctx->index, voltage_info.charger_voltage);
 
+	battery_voltage_adc_info = get_or_alloc_adc_info(test_ports_voltage_ctx->battery_voltage_adc);
 	battery_voltage_ad = get_adc_value(battery_voltage_adc_info,
 	                                   test_ports_voltage_ctx->battery_voltage_adc_rank);
 	//debug("channel %d battery voltage ad:%d", test_ports_voltage_ctx->index, battery_voltage_ad);
@@ -1003,10 +1013,15 @@ static temperature_adc_item_t temperature_adc_items[] = {
 
 static int16_t do_ports_temperature_test(test_ports_temperature_ctx_t *test_ports_temperature_ctx, channels_info_t *channels_info)
 {
-	adc_info_t *temperature_adc_info = get_or_alloc_adc_info(test_ports_temperature_ctx->temperature_adc);
+	adc_info_t *temperature_adc_info;
 	uint16_t temperature_ad = 0;
 	int16_t temperature = 0;
 
+	if(test_ports_temperature_ctx->test_type_ports == TEST_TYPE_PORTS_NONE) {
+		return temperature;
+	}
+
+	temperature_adc_info = get_or_alloc_adc_info(test_ports_temperature_ctx->temperature_adc);
 	temperature_ad = get_adc_value(temperature_adc_info,
 	                               test_ports_temperature_ctx->temperature_adc_rank);
 
