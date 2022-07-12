@@ -6,7 +6,7 @@
  *   文件名称：test_storage_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年07月12日 星期二 10时47分49秒
- *   修改日期：2022年07月12日 星期二 11时46分08秒
+ *   修改日期：2022年07月12日 星期二 12时41分25秒
  *   描    述：
  *
  *================================================================*/
@@ -20,6 +20,23 @@ typedef struct {
 	storage_info_t *storage_info;
 	uint32_t stamps;
 } test_storage_ctx_t;
+
+static uint32_t my_rand(uint32_t start, uint32_t end)
+{
+	uint32_t v = 0;
+
+	OS_ASSERT(start <= end);
+
+	while(1) {
+		v = ((uint32_t)os_rand()) % end;
+
+		if((v >= start) && (v <= end)) {
+			break;
+		}
+	}
+
+	return v;
+}
 
 static void storage_test_periodic(void *fn_ctx, void *chain_ctx)
 {
@@ -37,8 +54,8 @@ static void storage_test_periodic(void *fn_ctx, void *chain_ctx)
 
 	test_storage_ctx->stamps = ticks;
 
-	start = ((uint32_t)os_rand()) % (32 * 1024 * 1024);
-	size = ((uint32_t)os_rand()) % 1024;
+	start = my_rand(0, 32 * 1024 * 1024);
+	size = my_rand(1, 1024);
 
 	ret = test_storage_check(test_storage_ctx->storage_info, start, size);
 
