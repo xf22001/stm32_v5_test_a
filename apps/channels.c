@@ -6,7 +6,7 @@
  *   文件名称：channels.c
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 09时26分31秒
- *   修改日期：2022年07月04日 星期一 10时34分29秒
+ *   修改日期：2022年07月12日 星期二 11时11分38秒
  *   描    述：
  *
  *================================================================*/
@@ -230,6 +230,7 @@ static int channels_info_set_channels_config(channels_info_t *channels_info, cha
 	OS_ASSERT(register_callback(channels_info->common_event_chain, &channels_info->event_callback_item) == 0);
 
 	start_ports_tests(channels_info);
+	start_storage_tests(channels_info);
 
 	channels_info->configed = 1;
 

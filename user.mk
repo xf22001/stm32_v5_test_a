@@ -6,7 +6,7 @@
 #   文件名称：user.mk
 #   创 建 者：肖飞
 #   创建日期：2019年10月25日 星期五 13时04分38秒
-#   修改日期：2022年07月08日 星期五 09时16分30秒
+#   修改日期：2022年07月12日 星期二 11时09分41秒
 #   描    述：
 #
 #================================================================
@@ -53,11 +53,13 @@ USER_C_SOURCES += apps/app.c
 USER_C_SOURCES += apps/uart_debug_handler.c
 USER_C_SOURCES += apps/probe_tool_handler.c
 USER_C_SOURCES += apps/can_config.c
+USER_C_SOURCES += apps/storage_config.c
 USER_C_SOURCES += apps/channels_config.c
 USER_C_SOURCES += apps/channels.c
 USER_C_SOURCES += apps/test_can_a.c
 USER_C_SOURCES += apps/test_uart_a.c
 USER_C_SOURCES += apps/test_ports_a.c
+USER_C_SOURCES += apps/test_storage_a.c
 ifneq ($(call ifdef_any_of,SPI_CAN),)
 USER_C_SOURCES += apps/exti.c
 endif
@@ -90,6 +92,7 @@ USER_C_SOURCES += apps/modules/drivers/mcp2518/mcp25xxfd_driver/canfdspi/drv_can
 USER_C_SOURCES += apps/modules/drivers/can_ops_spi_can.c
 endif
 USER_C_SOURCES += apps/modules/drivers/usart_txrx.c
+USER_C_SOURCES += apps/modules/drivers/i2c_txrx.c
 USER_C_SOURCES += apps/modules/os/event_helper.c
 USER_C_SOURCES += apps/modules/os/callback_chain.c
 USER_C_SOURCES += apps/modules/os/bitmap_ops.c
@@ -104,6 +107,16 @@ USER_C_SOURCES += apps/modules/os/syscalls.c
 USER_C_SOURCES += apps/modules/tests/test_serial.c
 USER_C_SOURCES += apps/modules/tests/test_event.c
 USER_C_SOURCES += apps/modules/tests/test_storage.c
+USER_C_SOURCES += apps/modules/hardware/storage.c
+ifneq ($(call ifdef_any_of,STORAGE_OPS_25LC1024),)
+USER_C_SOURCES += apps/modules/hardware/storage_25lc1024.c
+endif
+ifneq ($(call ifdef_any_of,STORAGE_OPS_24LC128),)
+USER_C_SOURCES += apps/modules/hardware/storage_24lc128.c
+endif
+ifneq ($(call ifdef_any_of,STORAGE_OPS_W25Q256),)
+USER_C_SOURCES += apps/modules/hardware/storage_w25q256.c
+endif
 USER_C_SOURCES += apps/modules/tests/test_can.c
 
 USER_C_SOURCES += Middlewares/Third_Party/LwIP/src/core/def.c

@@ -6,7 +6,7 @@
  *   文件名称：channels.h
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 10时08分44秒
- *   修改日期：2022年07月07日 星期四 14时05分45秒
+ *   修改日期：2022年07月12日 星期二 10时59分26秒
  *   描    述：
  *
  *================================================================*/
@@ -100,6 +100,8 @@ typedef enum {
 	CHANNELS_FAULT_PAR_EXT_RX3,
 	CHANNELS_FAULT_PLUG1_LOCK_BACK,
 	CHANNELS_FAULT_PLUG2_LOCK_BACK,
+
+	CHANNELS_FAULT_STORAGE,
 
 	CHANNELS_FAULT_SIZE,
 } channels_fault_t;

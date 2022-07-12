@@ -6,7 +6,7 @@
  *   文件名称：channels_addr_handler.c
  *   创 建 者：肖飞
  *   创建日期：2021年07月16日 星期五 14时03分28秒
- *   修改日期：2022年07月07日 星期四 14时06分48秒
+ *   修改日期：2022年07月12日 星期二 10时53分58秒
  *   描    述：
  *
  *================================================================*/
@@ -70,6 +70,32 @@ void channels_modbus_data_action(void *fn_ctx, void *chain_ctx)
 		case 1007 ... 1010: {//温度
 			int index = (modbus_data_ctx->addr - 1007) % 4;
 			modbus_data_value_r(modbus_data_ctx, channels_info->temperature[index]);
+		}
+		break;
+
+		case 1011 ... 1016: {//时间
+			static uint16_t local_tm[6] = {0};
+
+			if(modbus_data_ctx->addr == 1011) {
+				time_t ts = get_time();
+				struct tm tm = *localtime(&ts);
+
+				debug("tm %04d-%02d-%02d %02d:%02d:%02d",
+				      tm.tm_year + 1900,
+				      tm.tm_mon + 1,
+				      tm.tm_mday,
+				      tm.tm_hour,
+				      tm.tm_min,
+				      tm.tm_sec);
+				local_tm[0] = tm.tm_year + 1900;
+				local_tm[1] = tm.tm_mon + 1;
+				local_tm[2] = tm.tm_mday;
+				local_tm[3] = tm.tm_hour;
+				local_tm[4] = tm.tm_min;
+				local_tm[5] = tm.tm_sec;
+			}
+
+			modbus_data_buffer_rw(modbus_data_ctx, local_tm, 6 * 2, modbus_data_ctx->addr - 1011);
 		}
 		break;
 
