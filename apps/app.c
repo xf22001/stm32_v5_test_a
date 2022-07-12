@@ -6,7 +6,7 @@
  *   文件名称：app.c
  *   创 建 者：肖飞
  *   创建日期：2019年10月11日 星期五 16时54分03秒
- *   修改日期：2022年07月12日 星期二 10时53分31秒
+ *   修改日期：2022年07月12日 星期二 15时00分30秒
  *   描    述：
  *
  *================================================================*/
@@ -31,6 +31,7 @@
 #include "dtu_ethernet.h"
 #endif
 #include "sal_hook.h"
+#include "ntp_client.h"
 
 #include "log.h"
 
@@ -262,6 +263,8 @@ void app(void const *argument)
 	OS_ASSERT(app_info->storage_info != NULL);
 
 	storage_set_cache(app_info->storage_info, cache_storage_info, cache_storage_callback);
+
+	app_info->mechine_info.tz = 8;
 
 	load_app_display_cache(app_info);
 
