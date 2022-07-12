@@ -6,12 +6,14 @@
  *   文件名称：test_storage_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年07月12日 星期二 10时47分49秒
- *   修改日期：2022年07月12日 星期二 11时28分20秒
+ *   修改日期：2022年07月12日 星期二 11时46分08秒
  *   描    述：
  *
  *================================================================*/
 #include "test_storage_a.h"
 #include "app.h"
+
+#include "log.h"
 
 typedef struct {
 	callback_item_t periodic_callback_item;
@@ -29,18 +31,19 @@ static void storage_test_periodic(void *fn_ctx, void *chain_ctx)
 	int start = 0;
 	int size = 0;
 
-	if(ticks_duration(ticks, test_storage_ctx->stamps) < 1000) {
+	if(ticks_duration(ticks, test_storage_ctx->stamps) < 3000) {
 		return;
 	}
 
 	test_storage_ctx->stamps = ticks;
 
-	start = os_rand() % (32 * 1024 * 1024);
-	size = os_rand() % 1024;
+	start = ((uint32_t)os_rand()) % (32 * 1024 * 1024);
+	size = ((uint32_t)os_rand()) % 1024;
 
 	ret = test_storage_check(test_storage_ctx->storage_info, start, size);
 
 	if(ret != 0) {
+		debug("");
 		fault = 1;
 	}
 
