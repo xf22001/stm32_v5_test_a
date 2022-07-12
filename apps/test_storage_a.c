@@ -6,7 +6,7 @@
  *   文件名称：test_storage_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年07月12日 星期二 10时47分49秒
- *   修改日期：2022年07月12日 星期二 11时11分01秒
+ *   修改日期：2022年07月12日 星期二 11时20分30秒
  *   描    述：
  *
  *================================================================*/
@@ -24,17 +24,22 @@ static void storage_test_periodic(void *fn_ctx, void *chain_ctx)
 	test_storage_ctx_t *test_storage_ctx = (test_storage_ctx_t *)fn_ctx;
 	channels_info_t *channels_info = (channels_info_t *)chain_ctx;
 	uint32_t ticks = osKernelSysTick();
+	int ret = 0;
+	uint8_t fault = 0;
 
-	if(ticks_duration(ticks, test_storage_ctx->storage_info) >= 1000) {
-		int ret = test_storage_check();
-		uint8_t fault = 0;
-
-		if(ret != 0) {
-			fault = 1;
-		}
-
-		set_fault(channels_info->faults, CHANNELS_FAULT_STORAGE, fault);
+	if(ticks_duration(ticks, test_storage_ctx->stamps) < 1000) {
+		return;
 	}
+
+	test_storage_ctx->stamps = ticks;
+
+	ret = test_storage_check();
+
+	if(ret != 0) {
+		fault = 1;
+	}
+
+	set_fault(channels_info->faults, CHANNELS_FAULT_STORAGE, fault);
 }
 
 void start_storage_tests(channels_info_t *channels_info)
