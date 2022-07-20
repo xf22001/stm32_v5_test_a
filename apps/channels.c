@@ -6,7 +6,7 @@
  *   文件名称：channels.c
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 09时26分31秒
- *   修改日期：2022年07月12日 星期二 15时02分16秒
+ *   修改日期：2022年07月20日 星期三 13时44分25秒
  *   描    述：
  *
  *================================================================*/
@@ -222,7 +222,7 @@ static int channels_info_set_channels_config(channels_info_t *channels_info, cha
 	channels_info->uart3 = test_uart_a(channels_info, channels_info->channels_config->uart3.huart, 2);
 	channels_info->uart4 = test_uart_a(channels_info, channels_info->channels_config->uart4.huart, 3);
 
-	channels_info->modbus_master_info = get_or_alloc_modbus_master_info(channels_config->comm_config.huart);
+	channels_info->modbus_master_info = get_or_alloc_modbus_master_info(get_or_alloc_uart_info(channels_config->comm_config.huart));
 	OS_ASSERT(channels_info->modbus_master_info != NULL);
 
 

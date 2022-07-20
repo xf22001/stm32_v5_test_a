@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月08日 星期五 09时10分52秒
+ *   修改日期：2022年07月20日 星期三 10时28分06秒
  *   描    述：
  *
  *================================================================*/
@@ -312,15 +312,19 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 
 		case 1: {
 			uint16_t value;
+			uint8_t fault = 1;
 
 			if(modbus_master_read_items_retry(channels_info->modbus_master_info, 1, test_ports_output_ctx->test_type_ports, 1, &value, 3) == 0) {
 				if(value == test_ports_output_ctx->gpio_state1) {
 					test_ports_output_ctx->state = 2;
+					fault = 0;
 				} else {
 				}
 			} else {
 				ret = -1;
 			}
+
+			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
 			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
 				ret = -1;
@@ -337,15 +341,19 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 
 		case 3: {
 			uint16_t value;
+			uint8_t fault = 1;
 
 			if(modbus_master_read_items_retry(channels_info->modbus_master_info, 1, test_ports_output_ctx->test_type_ports, 1, &value, 3) == 0) {
 				if(value == test_ports_output_ctx->gpio_state2) {
 					ret = 0;
+					fault = 0;
 				} else {
 				}
 			} else {
 				ret = -1;
 			}
+
+			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
 			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
 				ret = -1;
