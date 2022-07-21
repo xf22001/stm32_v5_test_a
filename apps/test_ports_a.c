@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月21日 星期四 11时20分50秒
+ *   修改日期：2022年07月21日 星期四 15时36分51秒
  *   描    述：
  *
  *================================================================*/
@@ -132,6 +132,7 @@ typedef struct {
 	test_ports_cc1_ctx_t test_ports_cc1_ctx;
 	test_ports_voltage_ctx_t test_ports_voltage_ctx;
 	test_ports_temperature_ctx_t test_ports_temperature_ctx;
+	uint32_t start_stamps;
 } test_ports_ctx_t;
 
 typedef struct {
@@ -386,8 +387,8 @@ static test_port_output_item_t test_port_output_items[] = {
 		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_RESET,
-		.gpio_state2 = GPIO_PIN_SET,
+		.gpio_state1 = GPIO_PIN_SET,
+		.gpio_state2 = GPIO_PIN_RESET,
 	},
 	{
 		.test_type_ports = TEST_TYPE_PORTS_PLUG1_LOCK_2,
@@ -397,8 +398,8 @@ static test_port_output_item_t test_port_output_items[] = {
 		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_RESET,
-		.gpio_state2 = GPIO_PIN_SET,
+		.gpio_state1 = GPIO_PIN_SET,
+		.gpio_state2 = GPIO_PIN_RESET,
 	},
 	{
 		.test_type_ports = TEST_TYPE_PORTS_PLUG2_LOCK_1,
@@ -408,8 +409,8 @@ static test_port_output_item_t test_port_output_items[] = {
 		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_RESET,
-		.gpio_state2 = GPIO_PIN_SET,
+		.gpio_state1 = GPIO_PIN_SET,
+		.gpio_state2 = GPIO_PIN_RESET,
 	},
 	{
 		.test_type_ports = TEST_TYPE_PORTS_PLUG2_LOCK_2,
@@ -419,8 +420,8 @@ static test_port_output_item_t test_port_output_items[] = {
 		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_RESET,
-		.gpio_state2 = GPIO_PIN_SET,
+		.gpio_state1 = GPIO_PIN_SET,
+		.gpio_state2 = GPIO_PIN_RESET,
 	},
 };
 
@@ -1310,8 +1311,11 @@ static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 	test_ports_ctx_t *test_ports_ctx = (test_ports_ctx_t *)fn_ctx;
 	channels_info_t *channels_info = (channels_info_t *)chain_ctx;
 
-	ports_output_test_periodic(test_ports_ctx, channels_info);
-	ports_input_test_periodic(test_ports_ctx, channels_info);
+	if(ticks_duration(osKernelSysTick(), test_ports_ctx->start_stamps) <= 60000) {
+		ports_output_test_periodic(test_ports_ctx, channels_info);
+		ports_input_test_periodic(test_ports_ctx, channels_info);
+	}
+
 	ports_cc1_test_periodic(test_ports_ctx, channels_info);
 	ports_voltage_test_periodic(test_ports_ctx, channels_info);
 	ports_temperature_test_periodic(test_ports_ctx, channels_info);
@@ -1330,6 +1334,7 @@ void start_ports_tests(channels_info_t *channels_info)
 		HAL_GPIO_WritePin(item->gpio_port, item->gpio_pin, item->default_state);
 	}
 
+	test_ports_ctx->start_stamps = osKernelSysTick();
 	test_ports_ctx->periodic_callback_item.fn = ports_test_periodic;
 	test_ports_ctx->periodic_callback_item.fn_ctx = test_ports_ctx;
 	OS_ASSERT(register_callback(channels_info->common_periodic_chain, &test_ports_ctx->periodic_callback_item) == 0);
