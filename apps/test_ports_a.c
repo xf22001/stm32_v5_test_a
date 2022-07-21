@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月21日 星期四 10时40分46秒
+ *   修改日期：2022年07月21日 星期四 11时20分50秒
  *   描    述：
  *
  *================================================================*/
@@ -454,7 +454,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 				if(value == item->gpio_state1) {
 					test_ports_output_ctx->state = 2;
 				} else {
-					//debug("fault %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state1);
+					//debug("test %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state1);
 				}
 			} else {
 				fault = 1;
@@ -465,7 +465,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
 			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
-				debug("fault %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state1);
+				debug("test %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state1);
 				ret = -1;
 			}
 		}
@@ -486,7 +486,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 				if(value == item->gpio_state2) {
 					ret = 0;
 				} else {
-					//debug("fault %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state2);
+					//debug("test %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state2);
 				}
 			} else {
 				fault = 1;
@@ -497,7 +497,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
 			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
-				debug("fault %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state2);
+				debug("test %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state2);
 				ret = -1;
 			}
 		}
@@ -534,7 +534,7 @@ void handle_next_ports_output_test(test_ports_output_ctx_t *test_ports_output_ct
 
 	test_ports_output_ctx->state = 0;
 
-	//debug("start output test fault %d", test_port_output_item->port_fault);
+	//debug("start output test %d", test_port_output_item->port_fault);
 	test_ports_output_ctx->item = test_port_output_item;
 }
 
@@ -850,7 +850,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 			}
 
 			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
-				debug("fault %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state1);
+				debug("test %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state1);
 				ret = -1;
 			}
 		}
@@ -879,7 +879,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 			}
 
 			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
-				debug("fault %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state2);
+				debug("test %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state2);
 				ret = -1;
 			}
 		}
@@ -915,7 +915,7 @@ void handle_next_ports_input_test(test_ports_input_ctx_t *test_ports_input_ctx, 
 	}
 
 	test_ports_input_ctx->state = 0;
-	//debug("start input test fault %d", test_port_input_item->port_fault);
+	//debug("start input test %d", test_port_input_item->port_fault);
 	test_ports_input_ctx->item = test_port_input_item;
 }
 
@@ -1326,7 +1326,7 @@ void start_ports_tests(channels_info_t *channels_info)
 
 	for(i = 0; i < ARRAY_SIZE(test_port_output_items); i++) {
 		test_port_output_item_t *item = &test_port_output_items[i];
-		debug("type %d value:%d", item->test_type_ports, item->default_state);
+		debug("test %d value:%d", item->port_fault, item->default_state);
 		HAL_GPIO_WritePin(item->gpio_port, item->gpio_pin, item->default_state);
 	}
 
