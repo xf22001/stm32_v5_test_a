@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月21日 星期四 17时13分48秒
+ *   修改日期：2022年07月21日 星期四 17时35分12秒
  *   描    述：
  *
  *================================================================*/
@@ -465,7 +465,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 
 			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
-			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 2000) {
 				debug("test %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state1);
 				ret = -1;
 			}
@@ -497,7 +497,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 
 			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
-			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 2000) {
 				debug("test %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state2);
 				ret = -1;
 			}
@@ -855,7 +855,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 		case 0: {
 			uint8_t fault = 0;
 
-			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->test_state1, 3) == 0) {
+			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->test_state1, 10) == 0) {
 				test_ports_input_ctx->state = 1;
 			} else {
 				fault = 1;
@@ -874,7 +874,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 			} else {
 			}
 
-			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 2000) {
 				debug("test %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state1);
 				ret = -1;
 			}
@@ -884,7 +884,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 		case 2: {
 			uint8_t fault = 0;
 
-			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->test_state2, 3) == 0) {
+			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->test_state2, 10) == 0) {
 				test_ports_input_ctx->state = 3;
 			} else {
 				fault = 1;
@@ -903,7 +903,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 			} else {
 			}
 
-			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 2000) {
 				debug("test %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state2);
 				ret = -1;
 			}
