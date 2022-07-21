@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月21日 星期四 15时36分51秒
+ *   修改日期：2022年07月21日 星期四 17时13分48秒
  *   描    述：
  *
  *================================================================*/
@@ -571,6 +571,7 @@ typedef struct {
 	int port_fault;
 	GPIO_TypeDef *gpio_port;
 	uint16_t gpio_pin;
+	uint8_t default_state;
 	uint8_t test_state1;
 	uint8_t test_state2;
 	uint8_t gpio_state1;
@@ -583,6 +584,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_DOOR1_OPEN,
 		.gpio_port = DOOR1_OPEN_GPIO_Port,
 		.gpio_pin = DOOR1_OPEN_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -593,6 +595,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_EPO,
 		.gpio_port = EPO_GPIO_Port,
 		.gpio_pin = EPO_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -603,6 +606,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FUSE1_OPEN,
 		.gpio_port = FUSE1_OPEN_GPIO_Port,
 		.gpio_pin = FUSE1_OPEN_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -613,6 +617,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FUSE2_OPEN,
 		.gpio_port = FUSE2_OPEN_GPIO_Port,
 		.gpio_pin = FUSE2_OPEN_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -623,6 +628,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_MAIN_RLY_PLUG1_BACK,
 		.gpio_port = MAIN_RLY_PLUG1_BACK_GPIO_Port,
 		.gpio_pin = MAIN_RLY_PLUG1_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -633,6 +639,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_MAIN_RLY_PLUG2_BACK,
 		.gpio_port = MAIN_RLY_PLUG2_BACK_GPIO_Port,
 		.gpio_pin = MAIN_RLY_PLUG2_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -643,8 +650,10 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_BRG_RLY_DRV_BACK,
 		.gpio_port = BRG_RLY_DRV_BACK_GPIO_Port,
 		.gpio_pin = BRG_RLY_DRV_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -655,6 +664,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_POWERDISTRIBUTION_1_BACK,
 		.gpio_port = POWERDISTRIBUTION_1_BACK_GPIO_Port,
 		.gpio_pin = POWERDISTRIBUTION_1_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -665,6 +675,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_POWERDISTRIBUTION_2_BACK,
 		.gpio_port = POWERDISTRIBUTION_2_BACK_GPIO_Port,
 		.gpio_pin = POWERDISTRIBUTION_2_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -675,6 +686,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_POWERDISTRIBUTION_3_BACK,
 		.gpio_port = POWERDISTRIBUTION_3_BACK_GPIO_Port,
 		.gpio_pin = POWERDISTRIBUTION_3_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -685,6 +697,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_POWERDISTRIBUTION_4_BACK,
 		.gpio_port = POWERDISTRIBUTION_4_BACK_GPIO_Port,
 		.gpio_pin = POWERDISTRIBUTION_4_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -695,6 +708,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_POWERDISTRIBUTION_5_BACK,
 		.gpio_port = POWERDISTRIBUTION_5_BACK_GPIO_Port,
 		.gpio_pin = POWERDISTRIBUTION_5_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -705,6 +719,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FAN1_FAULT,
 		.gpio_port = FAN1_FAULT_GPIO_Port,
 		.gpio_pin = FAN1_FAULT_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -715,6 +730,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FAN2_FAULT,
 		.gpio_port = FAN2_FAULT_GPIO_Port,
 		.gpio_pin = FAN2_FAULT_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -725,6 +741,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FAN3_FAULT,
 		.gpio_port = FAN3_FAULT_GPIO_Port,
 		.gpio_pin = FAN3_FAULT_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -735,6 +752,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FAN4_FAULT,
 		.gpio_port = FAN4_FAULT_GPIO_Port,
 		.gpio_pin = FAN4_FAULT_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -745,6 +763,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FAN5_FAULT,
 		.gpio_port = FAN5_FAULT_GPIO_Port,
 		.gpio_pin = FAN5_FAULT_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -755,46 +774,52 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_FAN5_FAULT,
 		.gpio_port = FAN5_FAULT_GPIO_Port,
 		.gpio_pin = FAN5_FAULT_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
 		.gpio_state2 = GPIO_PIN_RESET,
 	},
-	{
-		.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX1,
-		.port_fault = CHANNELS_FAULT_PAR_EXT_RX1,
-		.gpio_port = PAR_EXT_RX1_GPIO_Port,
-		.gpio_pin = PAR_EXT_RX1_Pin,
-		.test_state1 = GPIO_PIN_SET,
-		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_SET,
-		.gpio_state2 = GPIO_PIN_RESET,
-	},
-	{
-		.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX2,
-		.port_fault = CHANNELS_FAULT_PAR_EXT_RX2,
-		.gpio_port = PAR_EXT_RX2_GPIO_Port,
-		.gpio_pin = PAR_EXT_RX2_Pin,
-		.test_state1 = GPIO_PIN_SET,
-		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_SET,
-		.gpio_state2 = GPIO_PIN_RESET,
-	},
-	{
-		.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX3,
-		.port_fault = CHANNELS_FAULT_PAR_EXT_RX3,
-		.gpio_port = PAR_EXT_RX3_GPIO_Port,
-		.gpio_pin = PAR_EXT_RX3_Pin,
-		.test_state1 = GPIO_PIN_SET,
-		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_SET,
-		.gpio_state2 = GPIO_PIN_RESET,
-	},
+	//无供电
+	//{
+	//	.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX1,
+	//	.port_fault = CHANNELS_FAULT_PAR_EXT_RX1,
+	//	.gpio_port = PAR_EXT_RX1_GPIO_Port,
+	//	.gpio_pin = PAR_EXT_RX1_Pin,
+	//	.default_state = GPIO_PIN_SET,
+	//	.test_state1 = GPIO_PIN_RESET,
+	//	.test_state2 = GPIO_PIN_SET,
+	//	.gpio_state1 = GPIO_PIN_RESET,
+	//	.gpio_state2 = GPIO_PIN_SET,
+	//},
+	//{
+	//	.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX2,
+	//	.port_fault = CHANNELS_FAULT_PAR_EXT_RX2,
+	//	.gpio_port = PAR_EXT_RX2_GPIO_Port,
+	//	.gpio_pin = PAR_EXT_RX2_Pin,
+	//	.default_state = GPIO_PIN_SET,
+	//	.test_state1 = GPIO_PIN_RESET,
+	//	.test_state2 = GPIO_PIN_SET,
+	//	.gpio_state1 = GPIO_PIN_RESET,
+	//	.gpio_state2 = GPIO_PIN_SET,
+	//},
+	//{
+	//	.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX3,
+	//	.port_fault = CHANNELS_FAULT_PAR_EXT_RX3,
+	//	.gpio_port = PAR_EXT_RX3_GPIO_Port,
+	//	.gpio_pin = PAR_EXT_RX3_Pin,
+	//	.default_state = GPIO_PIN_SET,
+	//	.test_state1 = GPIO_PIN_RESET,
+	//	.test_state2 = GPIO_PIN_SET,
+	//	.gpio_state1 = GPIO_PIN_RESET,
+	//	.gpio_state2 = GPIO_PIN_SET,
+	//},
 	{
 		.test_type_ports = TEST_TYPE_PORTS_PLUG1_LOCK_BACK,
 		.port_fault = CHANNELS_FAULT_PLUG1_LOCK_BACK,
 		.gpio_port = PLUG1_LOCK_BACK_GPIO_Port,
 		.gpio_pin = PLUG1_LOCK_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -805,6 +830,7 @@ static test_port_input_item_t test_port_input_items[] = {
 		.port_fault = CHANNELS_FAULT_PLUG2_LOCK_BACK,
 		.gpio_port = PLUG2_LOCK_BACK_GPIO_Port,
 		.gpio_pin = PLUG2_LOCK_BACK_Pin,
+		.default_state = GPIO_PIN_RESET,
 		.test_state1 = GPIO_PIN_SET,
 		.test_state2 = GPIO_PIN_RESET,
 		.gpio_state1 = GPIO_PIN_SET,
@@ -818,12 +844,10 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 	test_port_input_item_t *item = (test_port_input_item_t *)test_ports_input_ctx->item;
 
 	if(item == NULL) {
-		debug("");
 		return ret;
 	}
 
 	if(item->test_type_ports == TEST_TYPE_PORTS_NONE) {
-		debug("");
 		return ret;
 	}
 
@@ -931,12 +955,20 @@ static void ports_input_test_periodic(test_ports_ctx_t *test_ports_ctx, channels
 	if(ret == -1) {
 		if(item != NULL) {
 			set_fault(channels_info->faults, item->port_fault, 1);
+
+			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
+				debug("");
+			}
 		}
 
 		test_ports_input_ctx->item = NULL;
 	} else if(ret == 0) {
 		if(item != NULL) {
 			set_fault(channels_info->faults, item->port_fault, 0);
+
+			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
+				debug("");
+			}
 		}
 
 		test_ports_input_ctx->item = NULL;
@@ -1332,6 +1364,15 @@ void start_ports_tests(channels_info_t *channels_info)
 		test_port_output_item_t *item = &test_port_output_items[i];
 		debug("test %d value:%d", item->port_fault, item->default_state);
 		HAL_GPIO_WritePin(item->gpio_port, item->gpio_pin, item->default_state);
+	}
+
+	for(i = 0; i < ARRAY_SIZE(test_port_input_items); i++) {
+		test_port_input_item_t *item = &test_port_input_items[i];
+		debug("test %d value:%d", item->port_fault, item->default_state);
+
+		if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
+			debug("");
+		}
 	}
 
 	test_ports_ctx->start_stamps = osKernelSysTick();
