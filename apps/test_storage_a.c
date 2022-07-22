@@ -6,7 +6,7 @@
  *   文件名称：test_storage_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年07月12日 星期二 10时47分49秒
- *   修改日期：2022年07月12日 星期二 15时05分15秒
+ *   修改日期：2022年07月22日 星期五 08时33分09秒
  *   描    述：
  *
  *================================================================*/
@@ -53,6 +53,10 @@ static void storage_test_periodic(void *fn_ctx, void *chain_ctx)
 		return;
 	}
 
+	if(get_fault(channels_info->faults, CHANNELS_FAULT_STORAGE) == 0) {
+		return;
+	}
+
 	test_storage_ctx->stamps = ticks;
 
 	start = my_rand(0, 32 * 1024 * 1024);
@@ -75,6 +79,8 @@ void start_storage_tests(channels_info_t *channels_info)
 
 	OS_ASSERT(test_storage_ctx != NULL);
 	OS_ASSERT(app_info != NULL);
+
+	set_fault(channels_info->faults, CHANNELS_FAULT_STORAGE, 1);
 
 	test_storage_ctx->storage_info = app_info->storage_info;
 	test_storage_ctx->periodic_callback_item.fn = storage_test_periodic;

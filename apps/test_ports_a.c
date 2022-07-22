@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月21日 星期四 17时35分12秒
+ *   修改日期：2022年07月22日 星期五 08时40分13秒
  *   描    述：
  *
  *================================================================*/
@@ -132,7 +132,6 @@ typedef struct {
 	test_ports_cc1_ctx_t test_ports_cc1_ctx;
 	test_ports_voltage_ctx_t test_ports_voltage_ctx;
 	test_ports_temperature_ctx_t test_ports_temperature_ctx;
-	uint32_t start_stamps;
 } test_ports_ctx_t;
 
 typedef struct {
@@ -439,6 +438,11 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 		return ret;
 	}
 
+	if(get_fault(channels_info->faults, item->port_fault) == 0) {
+		ret = 0;
+		return ret;
+	}
+
 	switch(test_ports_output_ctx->state) {
 		case 0: {
 			HAL_GPIO_WritePin(item->gpio_port, item->gpio_pin, item->test_state1);
@@ -465,7 +469,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 
 			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
-			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 2000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
 				debug("test %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state1);
 				ret = -1;
 			}
@@ -497,7 +501,7 @@ static int do_port_output_test(test_ports_output_ctx_t *test_ports_output_ctx, c
 
 			set_fault(channels_info->faults, CHANNELS_FAULT_UART5, fault);
 
-			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 2000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_output_ctx->stamp) > 1000) {
 				debug("test %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_output_ctx->state, value, item->gpio_state2);
 				ret = -1;
 			}
@@ -769,17 +773,6 @@ static test_port_input_item_t test_port_input_items[] = {
 		.gpio_state1 = GPIO_PIN_SET,
 		.gpio_state2 = GPIO_PIN_RESET,
 	},
-	{
-		.test_type_ports = TEST_TYPE_PORTS_FAN5_FAULT,
-		.port_fault = CHANNELS_FAULT_FAN5_FAULT,
-		.gpio_port = FAN5_FAULT_GPIO_Port,
-		.gpio_pin = FAN5_FAULT_Pin,
-		.default_state = GPIO_PIN_RESET,
-		.test_state1 = GPIO_PIN_SET,
-		.test_state2 = GPIO_PIN_RESET,
-		.gpio_state1 = GPIO_PIN_SET,
-		.gpio_state2 = GPIO_PIN_RESET,
-	},
 	//无供电
 	//{
 	//	.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX1,
@@ -851,6 +844,11 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 		return ret;
 	}
 
+	if(get_fault(channels_info->faults, item->port_fault) == 0) {
+		ret = 0;
+		return ret;
+	}
+
 	switch(test_ports_input_ctx->state) {
 		case 0: {
 			uint8_t fault = 0;
@@ -874,7 +872,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 			} else {
 			}
 
-			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 2000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
 				debug("test %d state %d value:%d, gpio_state1:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state1);
 				ret = -1;
 			}
@@ -903,7 +901,7 @@ static int do_port_input_test(test_ports_input_ctx_t *test_ports_input_ctx, chan
 			} else {
 			}
 
-			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 2000) {
+			if(ticks_duration(osKernelSysTick(), test_ports_input_ctx->stamp) > 1000) {
 				debug("test %d state %d value:%d, gpio_state2:%d", item->port_fault, test_ports_input_ctx->state, HAL_GPIO_ReadPin(item->gpio_port, item->gpio_pin), item->gpio_state2);
 				ret = -1;
 			}
@@ -956,7 +954,7 @@ static void ports_input_test_periodic(test_ports_ctx_t *test_ports_ctx, channels
 		if(item != NULL) {
 			set_fault(channels_info->faults, item->port_fault, 1);
 
-			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
+			while(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
 				debug("");
 			}
 		}
@@ -966,7 +964,7 @@ static void ports_input_test_periodic(test_ports_ctx_t *test_ports_ctx, channels
 		if(item != NULL) {
 			set_fault(channels_info->faults, item->port_fault, 0);
 
-			if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
+			while(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
 				debug("");
 			}
 		}
@@ -1343,10 +1341,8 @@ static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 	test_ports_ctx_t *test_ports_ctx = (test_ports_ctx_t *)fn_ctx;
 	channels_info_t *channels_info = (channels_info_t *)chain_ctx;
 
-	if(ticks_duration(osKernelSysTick(), test_ports_ctx->start_stamps) <= 60000) {
-		ports_output_test_periodic(test_ports_ctx, channels_info);
-		ports_input_test_periodic(test_ports_ctx, channels_info);
-	}
+	ports_output_test_periodic(test_ports_ctx, channels_info);
+	ports_input_test_periodic(test_ports_ctx, channels_info);
 
 	ports_cc1_test_periodic(test_ports_ctx, channels_info);
 	ports_voltage_test_periodic(test_ports_ctx, channels_info);
@@ -1364,6 +1360,7 @@ void start_ports_tests(channels_info_t *channels_info)
 		test_port_output_item_t *item = &test_port_output_items[i];
 		debug("test %d value:%d", item->port_fault, item->default_state);
 		HAL_GPIO_WritePin(item->gpio_port, item->gpio_pin, item->default_state);
+		set_fault(channels_info->faults, item->port_fault, 1);
 	}
 
 	for(i = 0; i < ARRAY_SIZE(test_port_input_items); i++) {
@@ -1373,9 +1370,10 @@ void start_ports_tests(channels_info_t *channels_info)
 		if(modbus_master_write_one_item_retry(channels_info->modbus_master_info, 1, item->test_type_ports, item->default_state, 3) != 0) {
 			debug("");
 		}
+
+		set_fault(channels_info->faults, item->port_fault, 1);
 	}
 
-	test_ports_ctx->start_stamps = osKernelSysTick();
 	test_ports_ctx->periodic_callback_item.fn = ports_test_periodic;
 	test_ports_ctx->periodic_callback_item.fn_ctx = test_ports_ctx;
 	OS_ASSERT(register_callback(channels_info->common_periodic_chain, &test_ports_ctx->periodic_callback_item) == 0);
