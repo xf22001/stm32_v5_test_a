@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月22日 星期五 08时40分13秒
+ *   修改日期：2022年07月22日 星期五 12时28分57秒
  *   描    述：
  *
  *================================================================*/
@@ -17,76 +17,6 @@
 #include "pt_temperature.h"
 
 #include "log.h"
-
-static int modbus_master_read_items_retry(modbus_master_info_t *modbus_master_info, uint8_t station, uint16_t addr, uint16_t number, uint16_t *values, uint8_t retry)
-{
-	int ret = -1;
-
-	while(retry > 0) {
-		ret = modbus_master_read_items(modbus_master_info, station, addr, number, values);
-
-		if(ret == 0) {
-			break;
-		}
-
-		retry--;
-	}
-
-	return ret;
-}
-
-static int modbus_master_read_only_items_retry(modbus_master_info_t *modbus_master_info, uint8_t station, uint16_t addr, uint16_t number, uint16_t *values, uint8_t retry)
-{
-	int ret = -1;
-
-	while(retry > 0) {
-		ret = modbus_master_read_only_items(modbus_master_info, station, addr, number, values);
-
-		if(ret == 0) {
-			break;
-		}
-
-		retry--;
-	}
-
-	return ret;
-}
-
-static int modbus_master_write_one_item_retry(modbus_master_info_t *modbus_master_info, uint8_t station, uint16_t addr, uint16_t value, uint8_t retry)
-{
-	int ret = -1;
-
-	while(retry > 0) {
-		ret = modbus_master_write_one_item(modbus_master_info, station, addr, value);
-
-		if(ret == 0) {
-			break;
-		}
-
-		retry--;
-	}
-
-	return ret;
-}
-
-static int modbus_master_write_items_retry(modbus_master_info_t *modbus_master_info, uint8_t station, uint16_t addr, uint16_t number, uint16_t *values, int retry)
-{
-	int ret = -1;
-
-	while(retry > 0) {
-		ret = modbus_master_write_items(modbus_master_info, station, addr, number, values);
-
-		if(ret == 0) {
-			break;
-		}
-
-		retry--;
-	}
-
-	return ret;
-}
-
-
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc3;
