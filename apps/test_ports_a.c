@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年07月22日 星期五 12时28分57秒
+ *   修改日期：2022年07月22日 星期五 16时08分29秒
  *   描    述：
  *
  *================================================================*/
@@ -1029,20 +1029,22 @@ void handle_next_ports_cc1_test(test_ports_cc1_ctx_t *test_ports_cc1_ctx, channe
 static void ports_cc1_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_info_t *channels_info)
 {
 	test_ports_cc1_ctx_t *test_ports_cc1_ctx = &test_ports_ctx->test_ports_cc1_ctx;
-	//channel_cc1_adc_item_t *item = (channel_cc1_adc_item_t *)test_ports_cc1_ctx->item;
+	channel_cc1_adc_item_t *item = (channel_cc1_adc_item_t *)test_ports_cc1_ctx->item;
 	uint8_t ret;
 
 	ret = do_ports_cc1_test(test_ports_cc1_ctx, channels_info);
 
-	switch(test_ports_cc1_ctx->index) {
-		case 0 ... 1: {
-			channels_info->channel_cc1[test_ports_cc1_ctx->index] = ret;
-		}
-		break;
+	if(item != NULL) {
+		switch(item->test_type_ports) {
+			case TEST_TYPE_PORTS_CHANNEL0_CC1 ... TEST_TYPE_PORTS_CHANNEL1_CC1: {
+				channels_info->channel_cc1[item->test_type_ports - TEST_TYPE_PORTS_CHANNEL0_CC1] = ret;
+			}
+			break;
 
-		default: {
+			default: {
+			}
+			break;
 		}
-		break;
 	}
 
 	test_ports_cc1_ctx->item = NULL;
@@ -1147,21 +1149,23 @@ void handle_next_ports_voltage_test(test_ports_voltage_ctx_t *test_ports_voltage
 static void ports_voltage_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_info_t *channels_info)
 {
 	test_ports_voltage_ctx_t *test_ports_voltage_ctx = &test_ports_ctx->test_ports_voltage_ctx;
-	//channel_voltage_adc_item_t *item = (channel_voltage_adc_item_t *)test_ports_voltage_ctx->item;
+	channel_voltage_adc_item_t *item = (channel_voltage_adc_item_t *)test_ports_voltage_ctx->item;
 	voltage_info_t voltage_info = {0};
 
 	voltage_info = do_ports_voltage_test(test_ports_voltage_ctx, channels_info);
 
-	switch(test_ports_voltage_ctx->index) {
-		case 0 ... 1: {
-			channels_info->charger_voltage[test_ports_voltage_ctx->index] = voltage_info.charger_voltage;
-			channels_info->battery_voltage[test_ports_voltage_ctx->index] = voltage_info.battery_voltage;
-		}
-		break;
+	if(item != NULL) {
+		switch(item->test_type_ports) {
+			case TEST_TYPE_PORTS_CHANNEL0_VOLTAGE ... TEST_TYPE_PORTS_CHANNEL1_VOLTAGE: {
+				channels_info->charger_voltage[item->test_type_ports - TEST_TYPE_PORTS_CHANNEL0_VOLTAGE] = voltage_info.charger_voltage;
+				channels_info->battery_voltage[item->test_type_ports - TEST_TYPE_PORTS_CHANNEL0_VOLTAGE] = voltage_info.battery_voltage;
+			}
+			break;
 
-		default: {
+			default: {
+			}
+			break;
 		}
-		break;
 	}
 
 	test_ports_voltage_ctx->item = NULL;
@@ -1245,20 +1249,22 @@ void handle_next_ports_temperature_test(test_ports_temperature_ctx_t *test_ports
 static void ports_temperature_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_info_t *channels_info)
 {
 	test_ports_temperature_ctx_t *test_ports_temperature_ctx = &test_ports_ctx->test_ports_temperature_ctx;
-	//temperature_adc_item_t *item = (temperature_adc_item_t *)test_ports_temperature_ctx->item;
+	temperature_adc_item_t *item = (temperature_adc_item_t *)test_ports_temperature_ctx->item;
 	int16_t temperature = 0;
 
 	temperature = do_ports_temperature_test(test_ports_temperature_ctx, channels_info);
 
-	switch(test_ports_temperature_ctx->index) {
-		case 0 ... 3: {
-			channels_info->temperature[test_ports_temperature_ctx->index] = temperature;
-		}
-		break;
+	if(item != NULL) {
+		switch(item->test_type_ports) {
+			case TEST_TYPE_PORTS_TEMPERATURE_1 ... TEST_TYPE_PORTS_TEMPERATURE_4: {
+				channels_info->temperature[item->test_type_ports - TEST_TYPE_PORTS_TEMPERATURE_1] = temperature;
+			}
+			break;
 
-		default: {
+			default: {
+			}
+			break;
 		}
-		break;
 	}
 
 	test_ports_temperature_ctx->item = NULL;
