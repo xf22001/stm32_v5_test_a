@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年08月03日 星期三 16时59分24秒
+ *   修改日期：2022年08月03日 星期三 17时14分55秒
  *   描    述：
  *
  *================================================================*/
@@ -836,39 +836,39 @@ static test_port_input_item_t test_port_input_items[] = {
 		.gpio_state2 = GPIO_PIN_RESET,
 	},
 	//无供电
-	{
-		.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX1,
-		.port_fault = CHANNELS_FAULT_PAR_EXT_RX1,
-		.gpio_port = PAR_EXT_RX1_GPIO_Port,
-		.gpio_pin = PAR_EXT_RX1_Pin,
-		.default_state = GPIO_PIN_SET,
-		.test_state1 = GPIO_PIN_RESET,
-		.test_state2 = GPIO_PIN_SET,
-		.gpio_state1 = GPIO_PIN_RESET,
-		.gpio_state2 = GPIO_PIN_SET,
-	},
-	{
-		.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX2,
-		.port_fault = CHANNELS_FAULT_PAR_EXT_RX2,
-		.gpio_port = PAR_EXT_RX2_GPIO_Port,
-		.gpio_pin = PAR_EXT_RX2_Pin,
-		.default_state = GPIO_PIN_SET,
-		.test_state1 = GPIO_PIN_RESET,
-		.test_state2 = GPIO_PIN_SET,
-		.gpio_state1 = GPIO_PIN_RESET,
-		.gpio_state2 = GPIO_PIN_SET,
-	},
-	{
-		.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX3,
-		.port_fault = CHANNELS_FAULT_PAR_EXT_RX3,
-		.gpio_port = PAR_EXT_RX3_GPIO_Port,
-		.gpio_pin = PAR_EXT_RX3_Pin,
-		.default_state = GPIO_PIN_SET,
-		.test_state1 = GPIO_PIN_RESET,
-		.test_state2 = GPIO_PIN_SET,
-		.gpio_state1 = GPIO_PIN_RESET,
-		.gpio_state2 = GPIO_PIN_SET,
-	},
+	//{
+	//	.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX1,
+	//	.port_fault = CHANNELS_FAULT_PAR_EXT_RX1,
+	//	.gpio_port = PAR_EXT_RX1_GPIO_Port,
+	//	.gpio_pin = PAR_EXT_RX1_Pin,
+	//	.default_state = GPIO_PIN_SET,
+	//	.test_state1 = GPIO_PIN_RESET,
+	//	.test_state2 = GPIO_PIN_SET,
+	//	.gpio_state1 = GPIO_PIN_RESET,
+	//	.gpio_state2 = GPIO_PIN_SET,
+	//},
+	//{
+	//	.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX2,
+	//	.port_fault = CHANNELS_FAULT_PAR_EXT_RX2,
+	//	.gpio_port = PAR_EXT_RX2_GPIO_Port,
+	//	.gpio_pin = PAR_EXT_RX2_Pin,
+	//	.default_state = GPIO_PIN_SET,
+	//	.test_state1 = GPIO_PIN_RESET,
+	//	.test_state2 = GPIO_PIN_SET,
+	//	.gpio_state1 = GPIO_PIN_RESET,
+	//	.gpio_state2 = GPIO_PIN_SET,
+	//},
+	//{
+	//	.test_type_ports = TEST_TYPE_PORTS_PAR_EXT_RX3,
+	//	.port_fault = CHANNELS_FAULT_PAR_EXT_RX3,
+	//	.gpio_port = PAR_EXT_RX3_GPIO_Port,
+	//	.gpio_pin = PAR_EXT_RX3_Pin,
+	//	.default_state = GPIO_PIN_SET,
+	//	.test_state1 = GPIO_PIN_RESET,
+	//	.test_state2 = GPIO_PIN_SET,
+	//	.gpio_state1 = GPIO_PIN_RESET,
+	//	.gpio_state2 = GPIO_PIN_SET,
+	//},
 	{
 		.test_type_ports = TEST_TYPE_PORTS_PLUG1_LOCK_BACK,
 		.port_fault = CHANNELS_FAULT_PLUG1_LOCK_BACK,
