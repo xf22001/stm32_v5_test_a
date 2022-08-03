@@ -56,8 +56,9 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, LED_YELLOW_PLUG1_Pin|LED_YELLOW_PLUG2_Pin|CP_RELAY_Pin|SYS_LED_Pin
-                          |DC_METER1_LED_Pin|DC_METER2_LED_Pin|LED_4G_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, LED_YELLOW_PLUG1_Pin|LED_YELLOW_PLUG2_Pin|CP_RELAY_Pin|MARQUEE1__Pin
+                          |MARQUEE2__Pin|SYS_LED_Pin|DC_METER1_LED_Pin|DC_METER2_LED_Pin
+                          |LED_4G_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOI, LED_RED_PLUG1_Pin|VTRANS_1_12V_24_Pin|VTRANS_2_12V_24_Pin|LED_GREEN_POWER2_Pin
@@ -101,9 +102,11 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PEPin PEPin PEPin PEPin
-                           PEPin PEPin PEPin PEPin */
-  GPIO_InitStruct.Pin = LED_YELLOW_PLUG1_Pin|LED_YELLOW_PLUG2_Pin|CP_RELAY_Pin|ETH_RST_Pin
-                          |SYS_LED_Pin|DC_METER1_LED_Pin|DC_METER2_LED_Pin|LED_4G_Pin;
+                           PEPin PEPin PEPin PEPin
+                           PEPin PEPin */
+  GPIO_InitStruct.Pin = LED_YELLOW_PLUG1_Pin|LED_YELLOW_PLUG2_Pin|CP_RELAY_Pin|MARQUEE1__Pin
+                          |MARQUEE2__Pin|ETH_RST_Pin|SYS_LED_Pin|DC_METER1_LED_Pin
+                          |DC_METER2_LED_Pin|LED_4G_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
