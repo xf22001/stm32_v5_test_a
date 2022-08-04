@@ -6,7 +6,7 @@
  *   文件名称：channels.h
  *   创 建 者：肖飞
  *   创建日期：2021年01月18日 星期一 10时08分44秒
- *   修改日期：2022年08月03日 星期三 08时33分32秒
+ *   修改日期：2022年08月04日 星期四 16时00分51秒
  *   描    述：
  *
  *================================================================*/
@@ -165,6 +165,7 @@ typedef struct {
 	uint16_t charger_voltage[2];//0.1v
 	uint16_t battery_voltage[2];//0.1v
 	int16_t temperature[4];
+	int16_t insulation[2];
 } channels_info_t;
 
 char *get_channels_event_type_des(channels_event_type_t type);

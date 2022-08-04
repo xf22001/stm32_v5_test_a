@@ -6,7 +6,7 @@
  *   文件名称：test_type.h
  *   创 建 者：肖飞
  *   创建日期：2022年06月01日 星期三 16时58分26秒
- *   修改日期：2022年08月03日 星期三 08时33分22秒
+ *   修改日期：2022年08月04日 星期四 16时01分31秒
  *   描    述：
  *
  *================================================================*/
@@ -92,6 +92,9 @@ typedef enum {
 	TEST_TYPE_PORTS_TEMPERATURE_2,
 	TEST_TYPE_PORTS_TEMPERATURE_3,
 	TEST_TYPE_PORTS_TEMPERATURE_4,
+
+	TEST_TYPE_PORTS_INSULATION_1,
+	TEST_TYPE_PORTS_INSULATION_2,
 } test_type_t;
 
 #ifdef __cplusplus

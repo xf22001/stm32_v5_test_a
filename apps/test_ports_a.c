@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年08月03日 星期三 17时14分55秒
+ *   修改日期：2022年08月04日 星期四 16时57分49秒
  *   描    述：
  *
  *================================================================*/
@@ -56,12 +56,28 @@ typedef struct {
 } test_ports_temperature_ctx_t;
 
 typedef struct {
+	int index;
+	uint8_t state;
+	uint32_t stamp;
+
+	uint16_t insulation_detect_u1_ad;
+	uint16_t insulation_detect_u2_ad;
+	float insulation_detect_u1;
+	float insulation_detect_u2;
+	float insulation_resistor_rx;
+	float insulation_resistor_ry;
+
+	void *item;
+} test_ports_insulation_ctx_t;
+
+typedef struct {
 	callback_item_t periodic_callback_item;
 	test_ports_output_ctx_t test_ports_output_ctx;
 	test_ports_input_ctx_t test_ports_input_ctx;
 	test_ports_cc1_ctx_t test_ports_cc1_ctx;
 	test_ports_voltage_ctx_t test_ports_voltage_ctx;
 	test_ports_temperature_ctx_t test_ports_temperature_ctx;
+	test_ports_insulation_ctx_t test_ports_insulation_ctx;
 } test_ports_ctx_t;
 
 typedef struct {
@@ -1404,6 +1420,217 @@ static void ports_temperature_test_periodic(test_ports_ctx_t *test_ports_ctx, ch
 	handle_next_ports_temperature_test(test_ports_temperature_ctx, channels_info);
 }
 
+typedef struct {
+	test_type_t test_type_ports;
+
+	void *insulation_voltage_adc;
+	uint8_t insulation_voltage_adc_rank;
+	void *insulation_k1_gpio;
+	uint16_t insulation_k1_pin;
+	void *insulation_k3_gpio;
+	uint16_t insulation_k3_pin;
+} insulation_adc_item_t;
+
+static insulation_adc_item_t insulation_adc_items[] = {
+	{
+		.test_type_ports = TEST_TYPE_PORTS_INSULATION_1,
+		.insulation_voltage_adc = &hadc3,
+		.insulation_voltage_adc_rank = 3,
+		.insulation_k1_gpio = K1_PLUG1_GPIO_Port,
+		.insulation_k1_pin = K1_PLUG1_Pin,
+		.insulation_k3_gpio = K3_PLUG1_GPIO_Port,
+		.insulation_k3_pin = K3_PLUG1_Pin,
+	},
+	{
+		.test_type_ports = TEST_TYPE_PORTS_INSULATION_2,
+		.insulation_voltage_adc = &hadc3,
+		.insulation_voltage_adc_rank = 4,
+		.insulation_k1_gpio = K1_PLUG2_GPIO_Port,
+		.insulation_k1_pin = K1_PLUG2_Pin,
+		.insulation_k3_gpio = K3_PLUG2_GPIO_Port,
+		.insulation_k3_pin = K3_PLUG2_Pin,
+	},
+};
+
+static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insulation_ctx, channels_info_t *channels_info, uint8_t *insulation)
+{
+	insulation_adc_item_t *item = (insulation_adc_item_t *)test_ports_insulation_ctx->item;
+	int ret = 1;
+
+	if(item == NULL) {
+		return ret;
+	}
+
+	switch(test_ports_insulation_ctx->state) {
+		case 0: {
+		}
+		break;
+
+		case 1: {//闭合k1
+			HAL_GPIO_WritePin(item->insulation_k1_gpio,
+			                  item->insulation_k1_pin,
+			                  GPIO_PIN_SET);
+			test_ports_insulation_ctx->stamp = osKernelSysTick();
+			test_ports_insulation_ctx->state = 2;
+		}
+		break;
+
+		case 2: {//k1稳定1秒
+			if(ticks_duration(osKernelSysTick(), test_ports_insulation_ctx->stamp) >= 1000) {
+				test_ports_insulation_ctx->state = 3;
+			}
+		}
+		break;
+
+		case 3: {//读u1电压
+			adc_info_t *adc_info = get_or_alloc_adc_info(item->insulation_voltage_adc);
+
+			test_ports_insulation_ctx->insulation_detect_u1_ad = get_adc_value(adc_info,
+			        item->insulation_voltage_adc_rank);
+			test_ports_insulation_ctx->insulation_detect_u1 = test_ports_insulation_ctx->insulation_detect_u1_ad * 3.3 / 4096;
+			debug("test type %d insulation_detect_u1:%f", item->test_type_ports, test_ports_insulation_ctx->insulation_detect_u1);
+			test_ports_insulation_ctx->state = 4;
+		}
+		break;
+
+		case 4: {//闭合k3
+			HAL_GPIO_WritePin(item->insulation_k3_gpio,
+			                  item->insulation_k3_pin,
+			                  GPIO_PIN_SET);
+			test_ports_insulation_ctx->stamp = osKernelSysTick();
+			test_ports_insulation_ctx->state = 5;
+		}
+		break;
+
+		case 5: {//k3稳定1秒
+			if(ticks_duration(osKernelSysTick(), test_ports_insulation_ctx->stamp) >= 1000) {
+				test_ports_insulation_ctx->state = 6;
+			}
+		}
+		break;
+
+		case 6: {//读u2电压
+			adc_info_t *adc_info = get_or_alloc_adc_info(item->insulation_voltage_adc);
+
+			test_ports_insulation_ctx->insulation_detect_u2_ad = get_adc_value(adc_info,
+			        item->insulation_voltage_adc_rank);
+			test_ports_insulation_ctx->insulation_detect_u2 = test_ports_insulation_ctx->insulation_detect_u2_ad * 3.3 / 4096;
+			debug("test type %d insulation_detect_u2:%f", item->test_type_ports, test_ports_insulation_ctx->insulation_detect_u2);
+			test_ports_insulation_ctx->state = 7;
+		}
+		break;
+
+		case 7: {//断开k1,k3
+			HAL_GPIO_WritePin(item->insulation_k3_gpio,
+			                  item->insulation_k3_pin,
+			                  GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(item->insulation_k1_gpio,
+			                  item->insulation_k1_pin,
+			                  GPIO_PIN_RESET);
+			test_ports_insulation_ctx->state = 8;
+		}
+		break;
+
+		case 8: {
+			uint32_t v_dc = 330;
+			float u1 = test_ports_insulation_ctx->insulation_detect_u1;
+			float u2 = test_ports_insulation_ctx->insulation_detect_u2;
+			float ryy;
+			float rx_resistor = 0;//0.1M
+			float ry_resistor = 0;//0.1M
+
+			debug("test type %d v_dc:%d", item->test_type_ports, v_dc);
+
+			test_ports_insulation_ctx->insulation_resistor_rx = (0.00325 * v_dc * (u1 - u2)) / (u1 * u2 - 0.00325 * v_dc * (u1 - u2));
+			debug("test type %d insulation_resistor_rx:%f", item->test_type_ports, test_ports_insulation_ctx->insulation_resistor_rx);
+
+			if(test_ports_insulation_ctx->insulation_resistor_rx <= 0) {
+				debug("");
+			}
+
+			ryy = (u1 * (0.00325 * v_dc - u2)) / (u2 * (0.00325 * v_dc - u1)) - 1;
+			debug("test type %d ryy:%f", item->test_type_ports, ryy);
+
+			test_ports_insulation_ctx->insulation_resistor_ry = (ryy * 12.39) / (12.39 - ryy);
+			debug("test type %d insulation_resistor_ry:%f", item->test_type_ports, test_ports_insulation_ctx->insulation_resistor_ry);
+
+			if(test_ports_insulation_ctx->insulation_resistor_ry <= 0) {
+				debug("");
+			}
+
+			rx_resistor = test_ports_insulation_ctx->insulation_resistor_rx * 10;
+			debug("test type %d rx_resistor:%d", item->test_type_ports, (int)rx_resistor);
+			ry_resistor = test_ports_insulation_ctx->insulation_resistor_ry * 10;
+			debug("test type %d ry_resistor:%d", item->test_type_ports, (int)ry_resistor);
+			*insulation = ry_resistor < rx_resistor ? ry_resistor : rx_resistor;
+			test_ports_insulation_ctx->state = 0;
+			ret = 0;
+		}
+		break;
+
+		default: {
+		}
+		break;
+	}
+
+	return ret;
+}
+
+void handle_next_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insulation_ctx, channels_info_t *channels_info)
+{
+	insulation_adc_item_t *item = (insulation_adc_item_t *)test_ports_insulation_ctx->item;
+	insulation_adc_item_t *insulation_adc_item;
+
+	if(item != NULL) {
+		return;
+	}
+
+	if(ARRAY_SIZE(insulation_adc_items) <= 0) {
+		return;
+	}
+
+	insulation_adc_item = &insulation_adc_items[test_ports_insulation_ctx->index];
+
+	test_ports_insulation_ctx->index++;
+
+	if(test_ports_insulation_ctx->index >= ARRAY_SIZE(insulation_adc_items)) {
+		test_ports_insulation_ctx->index = 0;
+	}
+
+	test_ports_insulation_ctx->item = insulation_adc_item;
+	test_ports_insulation_ctx->state = 0;
+}
+
+static void ports_insulation_test_periodic(test_ports_ctx_t *test_ports_ctx, channels_info_t *channels_info)
+{
+	test_ports_insulation_ctx_t *test_ports_insulation_ctx = &test_ports_ctx->test_ports_insulation_ctx;
+	insulation_adc_item_t *item = (insulation_adc_item_t *)test_ports_insulation_ctx->item;
+	int ret;
+	uint8_t insulation;
+
+	ret = do_ports_insulation_test(test_ports_insulation_ctx, channels_info, &insulation);
+
+	if(item != NULL) {
+		if(ret != 1) {
+			switch(item->test_type_ports) {
+				case TEST_TYPE_PORTS_INSULATION_1 ... TEST_TYPE_PORTS_INSULATION_2: {
+					channels_info->insulation[item->test_type_ports - TEST_TYPE_PORTS_INSULATION_1] = insulation;
+				}
+				break;
+
+				default: {
+				}
+				break;
+			}
+
+			test_ports_insulation_ctx->item = NULL;
+		}
+	}
+
+
+	handle_next_ports_insulation_test(test_ports_insulation_ctx, channels_info);
+}
+
 static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 {
 	test_ports_ctx_t *test_ports_ctx = (test_ports_ctx_t *)fn_ctx;
@@ -1415,6 +1642,7 @@ static void ports_test_periodic(void *fn_ctx, void *chain_ctx)
 	ports_cc1_test_periodic(test_ports_ctx, channels_info);
 	ports_voltage_test_periodic(test_ports_ctx, channels_info);
 	ports_temperature_test_periodic(test_ports_ctx, channels_info);
+	ports_insulation_test_periodic(test_ports_ctx, channels_info);
 }
 
 void start_ports_tests(channels_info_t *channels_info)
