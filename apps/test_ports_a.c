@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年08月04日 星期四 16时57分49秒
+ *   修改日期：2022年08月05日 星期五 08时38分12秒
  *   描    述：
  *
  *================================================================*/
@@ -1461,8 +1461,13 @@ static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insu
 		return ret;
 	}
 
+	if(item->test_type_ports == TEST_TYPE_PORTS_NONE) {
+		return ret;
+	}
+
 	switch(test_ports_insulation_ctx->state) {
 		case 0: {
+			test_ports_insulation_ctx->state = 1;
 		}
 		break;
 
@@ -1563,7 +1568,7 @@ static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insu
 			ry_resistor = test_ports_insulation_ctx->insulation_resistor_ry * 10;
 			debug("test type %d ry_resistor:%d", item->test_type_ports, (int)ry_resistor);
 			*insulation = ry_resistor < rx_resistor ? ry_resistor : rx_resistor;
-			test_ports_insulation_ctx->state = 0;
+			test_ports_insulation_ctx->state = 9;
 			ret = 0;
 		}
 		break;
