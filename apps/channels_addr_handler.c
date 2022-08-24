@@ -6,7 +6,7 @@
  *   文件名称：channels_addr_handler.c
  *   创 建 者：肖飞
  *   创建日期：2021年07月16日 星期五 14时03分28秒
- *   修改日期：2022年08月05日 星期五 08时40分24秒
+ *   修改日期：2022年08月24日 星期三 11时27分56秒
  *   描    述：
  *
  *================================================================*/
@@ -102,6 +102,12 @@ void channels_modbus_data_action(void *fn_ctx, void *chain_ctx)
 		case 1017 ... 1018: {
 			int index = (modbus_data_ctx->addr - 1017) % 2;
 			modbus_data_value_r(modbus_data_ctx, channels_info->insulation[index]);
+		}
+		break;
+
+		case 1019 ... 1020: {
+			int index = (modbus_data_ctx->addr - 1019) % 2;
+			modbus_data_value_r(modbus_data_ctx, channels_info->insulation_voltage[index]);
 		}
 		break;
 

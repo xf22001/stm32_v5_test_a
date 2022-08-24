@@ -6,7 +6,7 @@
  *   文件名称：test_ports_a.c
  *   创 建 者：肖飞
  *   创建日期：2022年05月16日 星期一 16时36分32秒
- *   修改日期：2022年08月05日 星期五 08时38分12秒
+ *   修改日期：2022年08月24日 星期三 11时35分04秒
  *   描    述：
  *
  *================================================================*/
@@ -1452,7 +1452,7 @@ static insulation_adc_item_t insulation_adc_items[] = {
 	},
 };
 
-static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insulation_ctx, channels_info_t *channels_info, uint8_t *insulation)
+static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insulation_ctx, channels_info_t *channels_info, uint8_t *insulation, uint16_t *insulation_voltage)
 {
 	insulation_adc_item_t *item = (insulation_adc_item_t *)test_ports_insulation_ctx->item;
 	int ret = 1;
@@ -1494,6 +1494,8 @@ static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insu
 			        item->insulation_voltage_adc_rank);
 			test_ports_insulation_ctx->insulation_detect_u1 = test_ports_insulation_ctx->insulation_detect_u1_ad * 3.3 / 4096;
 			debug("test type %d insulation_detect_u1:%f", item->test_type_ports, test_ports_insulation_ctx->insulation_detect_u1);
+			*insulation_voltage = test_ports_insulation_ctx->insulation_detect_u1 * 10000;
+			ret = 2;
 			test_ports_insulation_ctx->state = 4;
 		}
 		break;
@@ -1521,6 +1523,8 @@ static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insu
 			        item->insulation_voltage_adc_rank);
 			test_ports_insulation_ctx->insulation_detect_u2 = test_ports_insulation_ctx->insulation_detect_u2_ad * 3.3 / 4096;
 			debug("test type %d insulation_detect_u2:%f", item->test_type_ports, test_ports_insulation_ctx->insulation_detect_u2);
+			*insulation_voltage = test_ports_insulation_ctx->insulation_detect_u2 * 10000;
+			ret = 2;
 			test_ports_insulation_ctx->state = 7;
 		}
 		break;
@@ -1556,7 +1560,7 @@ static int do_ports_insulation_test(test_ports_insulation_ctx_t *test_ports_insu
 			ryy = (u1 * (0.00325 * v_dc - u2)) / (u2 * (0.00325 * v_dc - u1)) - 1;
 			debug("test type %d ryy:%f", item->test_type_ports, ryy);
 
-			test_ports_insulation_ctx->insulation_resistor_ry = (ryy * 12.39) / (12.39 - ryy);
+			test_ports_insulation_ctx->insulation_resistor_ry = (ryy * 24) / (24 - ryy);
 			debug("test type %d insulation_resistor_ry:%f", item->test_type_ports, test_ports_insulation_ctx->insulation_resistor_ry);
 
 			if(test_ports_insulation_ctx->insulation_resistor_ry <= 0) {
@@ -1612,14 +1616,19 @@ static void ports_insulation_test_periodic(test_ports_ctx_t *test_ports_ctx, cha
 	insulation_adc_item_t *item = (insulation_adc_item_t *)test_ports_insulation_ctx->item;
 	int ret;
 	uint8_t insulation;
+	uint16_t insulation_voltage;
 
-	ret = do_ports_insulation_test(test_ports_insulation_ctx, channels_info, &insulation);
+	ret = do_ports_insulation_test(test_ports_insulation_ctx, channels_info, &insulation, &insulation_voltage);
 
 	if(item != NULL) {
 		if(ret != 1) {
 			switch(item->test_type_ports) {
 				case TEST_TYPE_PORTS_INSULATION_1 ... TEST_TYPE_PORTS_INSULATION_2: {
-					channels_info->insulation[item->test_type_ports - TEST_TYPE_PORTS_INSULATION_1] = insulation;
+					if(ret == 0) {
+						channels_info->insulation[item->test_type_ports - TEST_TYPE_PORTS_INSULATION_1] = insulation;
+					} else if(ret == 2) {
+						channels_info->insulation_voltage[item->test_type_ports - TEST_TYPE_PORTS_INSULATION_1] = insulation_voltage;
+					}
 				}
 				break;
 
@@ -1628,7 +1637,9 @@ static void ports_insulation_test_periodic(test_ports_ctx_t *test_ports_ctx, cha
 				break;
 			}
 
-			test_ports_insulation_ctx->item = NULL;
+			if(ret == 0) {
+				test_ports_insulation_ctx->item = NULL;
+			}
 		}
 	}
 
