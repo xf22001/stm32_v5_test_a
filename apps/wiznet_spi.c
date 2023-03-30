@@ -6,15 +6,12 @@
  *   文件名称：wiznet_spi.c
  *   创 建 者：肖飞
  *   创建日期：2021年05月19日 星期三 09时47分16秒
- *   修改日期：2021年05月24日 星期一 08时39分36秒
+ *   修改日期：2023年03月14日 星期二 14时33分02秒
  *   描    述：
  *
  *================================================================*/
 #include "app_platform.h"
 #include "cmsis_os.h"
-
-#include <wizchip_socket.h>
-#include "DHCP/wizchip_dhcp.h"
 
 #include "os_utils.h"
 #include "spi_txrx.h"
@@ -33,7 +30,11 @@ int wiznet_spi_init(void)
 
 void wiznet_spi_write_byte(uint8_t data)
 {
-	int ret = spi_tx_data(spi_info, &data, 1, 10);
+	int ret = -1;
+
+	OS_ASSERT(spi_info != NULL);
+	OS_ASSERT(spi_info->claimed == 1);
+	ret = spi_tx_data_unlocked(spi_info, &data, 1, 10);
 
 	if(ret != 0) {
 		//debug("");
@@ -43,8 +44,11 @@ void wiznet_spi_write_byte(uint8_t data)
 uint8_t wiznet_spi_read_byte(void)
 {
 	uint8_t byte = 0;
+	int ret = -1;
 
-	int ret = spi_rx_data(spi_info, &byte, 1, 10);
+	OS_ASSERT(spi_info != NULL);
+	OS_ASSERT(spi_info->claimed == 1);
+	ret = spi_rx_data_unlocked(spi_info, &byte, 1, 10);
 
 	if(ret != 0) {
 		//debug("");
@@ -55,7 +59,11 @@ uint8_t wiznet_spi_read_byte(void)
 
 void wiznet_spi_write_burst(uint8_t *pbuf, uint16_t len)
 {
-	int ret = spi_tx_data(spi_info, pbuf, len, 10);
+	int ret = -1;
+
+	OS_ASSERT(spi_info != NULL);
+	OS_ASSERT(spi_info->claimed == 1);
+	ret = spi_tx_data_unlocked(spi_info, pbuf, len, 10);
 
 	if(ret != 0) {
 		//debug("");
@@ -64,7 +72,11 @@ void wiznet_spi_write_burst(uint8_t *pbuf, uint16_t len)
 
 void wiznet_spi_read_burst(uint8_t *pbuf, uint16_t len)
 {
-	int ret = spi_rx_data(spi_info, pbuf, len, 10);
+	int ret = -1;
+
+	OS_ASSERT(spi_info != NULL);
+	OS_ASSERT(spi_info->claimed == 1);
+	ret = spi_rx_data_unlocked(spi_info, pbuf, len, 10);
 
 	if(ret != 0) {
 		//debug("");
@@ -73,12 +85,14 @@ void wiznet_spi_read_burst(uint8_t *pbuf, uint16_t len)
 
 void wiznet_spi_cs_select(void)
 {
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+	OS_ASSERT(spi_info != NULL);
+	spi_claim(spi_info, ETH_CS_GPIO_Port, ETH_CS_Pin);
 }
 
 void wiznet_spi_cs_deselect(void)
 {
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+	OS_ASSERT(spi_info != NULL);
+	spi_unclaim(spi_info, ETH_CS_GPIO_Port, ETH_CS_Pin);
 }
 
 void wiz_reset(void)

@@ -6,7 +6,7 @@
 #   文件名称：user.mk
 #   创 建 者：肖飞
 #   创建日期：2019年10月25日 星期五 13时04分38秒
-#   修改日期：2022年07月12日 星期二 11时09分41秒
+#   修改日期：2023年03月30日 星期四 09时41分36秒
 #   描    述：
 #
 #================================================================
@@ -22,7 +22,7 @@ USER_C_INCLUDES += -Iapps
 USER_C_INCLUDES += -Iapps/modules
 USER_C_INCLUDES += -Iapps/modules/os
 USER_C_INCLUDES += -Iapps/modules/drivers
-ifneq ($(call ifdef_any_of,SPI_CAN),)
+ifneq ($(call ifdef_any_of,SPI_CAN_MCP2518),)
 USER_C_INCLUDES += -Iapps/modules/drivers/mcp2518
 USER_C_INCLUDES += -Iapps/modules/drivers/mcp2518/mcp25xxfd_driver/canfdspi
 USER_C_INCLUDES += -Iapps/modules/drivers/mcp2518/mcp25xxfd_driver/spi
@@ -50,8 +50,6 @@ USER_C_SOURCES += apps/os_memory.c
 USER_C_SOURCES += apps/os_random.c
 USER_C_SOURCES += apps/local_time.c
 USER_C_SOURCES += apps/app.c
-USER_C_SOURCES += apps/uart_debug_handler.c
-USER_C_SOURCES += apps/probe_tool_handler.c
 USER_C_SOURCES += apps/can_config.c
 USER_C_SOURCES += apps/storage_config.c
 USER_C_SOURCES += apps/channels_config.c
@@ -60,7 +58,7 @@ USER_C_SOURCES += apps/test_can_a.c
 USER_C_SOURCES += apps/test_uart_a.c
 USER_C_SOURCES += apps/test_ports_a.c
 USER_C_SOURCES += apps/test_storage_a.c
-ifneq ($(call ifdef_any_of,SPI_CAN),)
+ifneq ($(call ifdef_any_of,SPI_CAN_MCP2518),)
 USER_C_SOURCES += apps/exti.c
 endif
 USER_C_SOURCES += apps/channels_addr_handler.c
@@ -69,16 +67,12 @@ USER_C_SOURCES += apps/wiznet_spi.c
 USER_C_SOURCES += apps/modules/app/uart_debug.c
 USER_C_SOURCES += apps/modules/app/can_data_task.c
 USER_C_SOURCES += apps/modules/app/uart_data_task.c
-#USER_C_SOURCES += apps/modules/app/duty_cycle_pattern.c
 USER_C_SOURCES += apps/modules/app/early_sys_callback.c
 USER_C_SOURCES += apps/modules/app/connect_state.c
 USER_C_SOURCES += apps/modules/app/can_command.c
 USER_C_SOURCES += apps/modules/app/display.c
 USER_C_SOURCES += apps/modules/app/pt_temperature.c
-USER_C_SOURCES += apps/modules/app/probe_tool.c
-USER_C_SOURCES += apps/modules/app/request.c
 USER_C_SOURCES += apps/modules/app/poll_loop.c
-USER_C_SOURCES += apps/modules/app/ntp_client.c
 USER_C_SOURCES += apps/modules/hardware/modbus_master_txrx.c
 USER_C_SOURCES += apps/modules/hardware/modbus_slave_txrx.c
 USER_C_SOURCES += apps/modules/hardware/modbus_spec.c
@@ -87,9 +81,9 @@ USER_C_SOURCES += apps/modules/hardware/hw_rtc.c
 USER_C_SOURCES += apps/modules/drivers/spi_txrx.c
 USER_C_SOURCES += apps/modules/drivers/can_txrx.c
 USER_C_SOURCES += apps/modules/drivers/can_ops_hal.c
-ifneq ($(call ifdef_any_of,SPI_CAN),)
+ifneq ($(call ifdef_any_of,SPI_CAN_MCP2518),)
 USER_C_SOURCES += apps/modules/drivers/mcp2518/mcp25xxfd_driver/canfdspi/drv_canfdspi_api.c
-USER_C_SOURCES += apps/modules/drivers/can_ops_spi_can.c
+USER_C_SOURCES += apps/modules/drivers/can_ops_spi_can_mcp2518.c
 endif
 USER_C_SOURCES += apps/modules/drivers/usart_txrx.c
 USER_C_SOURCES += apps/modules/drivers/i2c_txrx.c
@@ -104,20 +98,14 @@ USER_C_SOURCES += apps/modules/os/object_class.c
 USER_C_SOURCES += apps/modules/os/soft_timer.c
 USER_C_SOURCES += apps/modules/os/retarget.c
 USER_C_SOURCES += apps/modules/os/syscalls.c
-USER_C_SOURCES += apps/modules/tests/test_serial.c
-USER_C_SOURCES += apps/modules/tests/test_event.c
 USER_C_SOURCES += apps/modules/tests/test_storage.c
 USER_C_SOURCES += apps/modules/hardware/storage.c
-ifneq ($(call ifdef_any_of,STORAGE_OPS_25LC1024),)
-USER_C_SOURCES += apps/modules/hardware/storage_25lc1024.c
-endif
 ifneq ($(call ifdef_any_of,STORAGE_OPS_24LC128),)
 USER_C_SOURCES += apps/modules/hardware/storage_24lc128.c
 endif
 ifneq ($(call ifdef_any_of,STORAGE_OPS_W25Q256),)
 USER_C_SOURCES += apps/modules/hardware/storage_w25q256.c
 endif
-USER_C_SOURCES += apps/modules/tests/test_can.c
 
 USER_C_SOURCES += Middlewares/Third_Party/LwIP/src/core/def.c
 USER_C_SOURCES += Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_addr.c

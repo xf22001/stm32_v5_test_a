@@ -6,7 +6,7 @@
  *   文件名称：app.c
  *   创 建 者：肖飞
  *   创建日期：2019年10月11日 星期五 16时54分03秒
- *   修改日期：2022年07月19日 星期二 17时15分13秒
+ *   修改日期：2023年03月30日 星期四 09时42分23秒
  *   描    述：
  *
  *================================================================*/
@@ -280,21 +280,10 @@ void app(void const *argument)
 	poll_loop = get_or_alloc_poll_loop(0);
 	OS_ASSERT(poll_loop != NULL);
 
-	probe_broadcast_add_poll_loop(poll_loop);
-	probe_server_add_poll_loop(poll_loop);
-
-	//while(is_log_server_valid() == 0) {
-	//	osDelay(1);
-	//}
-
-	add_log_handler((log_fn_t)log_udp_data);
-
 	debug("===========================================start app============================================");
 
 	channels_info = start_channels();
 	OS_ASSERT(channels_info != NULL);
-
-	ntp_client_add_poll_loop(poll_loop);
 
 	display_info = (display_info_t *)channels_info->display_info;
 	OS_ASSERT(display_info != NULL);

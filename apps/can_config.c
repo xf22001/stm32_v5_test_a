@@ -6,7 +6,7 @@
  *   文件名称：can_config.c
  *   创 建 者：肖飞
  *   创建日期：2020年04月17日 星期五 09时16分53秒
- *   修改日期：2022年05月10日 星期二 16时17分40秒
+ *   修改日期：2023年03月30日 星期四 09时31分32秒
  *   描    述：
  *
  *================================================================*/
@@ -47,9 +47,9 @@ can_config_t can_config_can2 = {
 	.filter_mask_ext = 0,
 };
 
-#if defined(SPI_CAN)
+#if defined(SPI_CAN_MCP2518)
 can_config_t can_config_can3 = {
-	.type = CAN_TYPE_SPI_CAN,
+	.type = CAN_TYPE_SPI_CAN_MCP2518,
 	.hcan = &hspi3,
 	.config_can = NULL,
 	.filter_number = CAN_FILTER0,
@@ -70,7 +70,7 @@ can_config_t can_config_can3 = {
 static can_config_t *can_config_sz[] = {
 	&can_config_can1,
 	&can_config_can2,
-#if defined(SPI_CAN)
+#if defined(SPI_CAN_MCP2518)
 	&can_config_can3,
 #endif
 };
